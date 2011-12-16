@@ -9,9 +9,6 @@ AsfPlayer::AsfPlayer(const string& file)
 {
     this->filename = file;
 
-    for (int i = 0; i < 200; i++)
-        for (int j = 0; i < 200; i++)
-            this->data_image[i][j] = 0;
 }
 
 bool AsfPlayer::show_image(unsigned frame)
@@ -20,6 +17,7 @@ bool AsfPlayer::show_image(unsigned frame)
     {
 
         uchar *data;
+        int k = 0;
 
         IplImage *img = cvCreateImage(cvSize(asf_file.cols, asf_file.rows), IPL_DEPTH_8U, 1);
 
@@ -27,9 +25,12 @@ bool AsfPlayer::show_image(unsigned frame)
 
         for (int i = 0; i < (img->height) ; i++) {
             for (int j = 0; j < (img->width); j++) {
-                data[i * (img->widthStep) + j * (img->nChannels)] = this->data_image[i][j];
+                data[i * (img->widthStep) + j * (img->nChannels)] =  this->data_image[k];
+                k++;
             }
         }
+
+         this->data_image.erase(this->data_image.begin(), this->data_image.end());
 
         cvNamedWindow("frame", CV_WINDOW_NORMAL);
 
@@ -168,7 +169,7 @@ bool AsfPlayer::readFile()
 
                     for (unsigned j = 0; j < asf_file.cols; ++j)
                     {
-                        this->data_image[i][j] = atoi(tmp_array[j].c_str());
+                        this->data_image.push_back(atoi(tmp_array[j].c_str()));
                     }
 
                     i++;

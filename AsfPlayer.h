@@ -41,6 +41,6 @@ private:
     void readLine(std::string &, std::vector<std::string> &, char);
 
     //max image
-    int data_image[1200][1200];
+    vector<int> data_image;
 
 };

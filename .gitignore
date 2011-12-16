@@ -2,3 +2,5 @@
 *.o
 player
 nbproject/
+.dep.inc
+Makefile-asf-player.mk
