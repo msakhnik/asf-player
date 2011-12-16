@@ -16,8 +16,7 @@
 #include <highgui.h>
 #include <cxcore.h>
 
-class AsfPlayer
-{
+class AsfPlayer {
 public:
     AsfPlayer(const std::string&);
 
@@ -26,6 +25,8 @@ public:
 
     // read from file
     bool readFile();
+
+    bool recordVideo();
 
     bool full_screen;
     bool frame_by_frame;

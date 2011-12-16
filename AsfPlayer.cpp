@@ -23,14 +23,16 @@ bool AsfPlayer::show_image(unsigned frame)
 
         data = (uchar *) img->imageData;
 
-        for (int i = 0; i < (img->height) ; i++) {
-            for (int j = 0; j < (img->width); j++) {
-                data[i * (img->widthStep) + j * (img->nChannels)] =  this->data_image[k];
+        for (int i = 0; i < (img->height); i++)
+        {
+            for (int j = 0; j < (img->width); j++)
+            {
+                data[i * (img->widthStep) + j * (img->nChannels)] = this->data_image[k];
                 k++;
             }
         }
 
-         this->data_image.erase(this->data_image.begin(), this->data_image.end());
+        this->data_image.erase(this->data_image.begin(), this->data_image.end());
 
         cvNamedWindow("frame", CV_WINDOW_NORMAL);
 
@@ -39,15 +41,19 @@ bool AsfPlayer::show_image(unsigned frame)
 
         cvShowImage("frame", img);
 
-        if (this->frame_by_frame) {
+        if (this->frame_by_frame)
+        {
             cvWaitKey(0);
-        } else {
+        }
+        else
+        {
             cvWaitKey(asf_file.seconds_per_frame);
         }
 
         cvReleaseImage(&img);
 
-        if (frame == asf_file.end_frame) {
+        if (frame == asf_file.end_frame)
+        {
             cvDestroyWindow("image");
             return false;
         }
@@ -61,7 +67,7 @@ void AsfPlayer::readLine(string & str, vector<string> &array, char split)
     istringstream is(str);
     string s;
 
-     while (getline(is, s, split))
+    while (getline(is, s, split))
         array.push_back(s);
 }
 
@@ -86,13 +92,18 @@ bool AsfPlayer::readFile()
     int time = 0;
     int i = 0;
 
-    if (myfile.is_open()) {
-        while (myfile.good()) {
+    if (myfile.is_open())
+    {
+        while (myfile.good())
+        {
+
             getline(myfile, line);
 
-            if(line.length()  <= 3) {
+            if (line.length() <= 3)
+            {
 
-                if (frame) {
+                if (frame)
+                {
                     // create and show image
                     if (!show_image(frame))
                         break;
@@ -107,7 +118,8 @@ bool AsfPlayer::readFile()
             }
 
             // read video info and save in global map-array
-            if (header) {
+            if (header)
+            {
                 vector<string> tmp_array;
 
                 readLine(line, tmp_array, ' ');
@@ -118,30 +130,52 @@ bool AsfPlayer::readFile()
                 for (iter = tmp_array.begin() + 1; iter != tmp_array.end(); iter++)
                     tmp_val += *iter;
 
-                if (tmp_array[0] == "DATA_TYPE") {
+                if (tmp_array[0] == "DATA_TYPE")
+                {
                     asf_file.data_type = tmp_val;
-                } else if (tmp_array[0] == "VERSION") {
+                }
+                else if (tmp_array[0] == "VERSION")
+                {
                     asf_file.version = tmp_val;
-                } else if (tmp_array[0] == "NOISE_THRESHOLD") {
+                }
+                else if (tmp_array[0] == "NOISE_THRESHOLD")
+                {
                     asf_file.noise_threshold = atoi(tmp_val.c_str());
-                } else if (tmp_array[0] == "COLS") {
+                }
+                else if (tmp_array[0] == "COLS")
+                {
                     asf_file.cols = atoi(tmp_val.c_str());
-                } else if (tmp_array[0] == "ROWS") {
+                }
+                else if (tmp_array[0] == "ROWS")
+                {
                     asf_file.rows = atoi(tmp_val.c_str());
-                } else if (tmp_array[0] == "START_FRAME") {
+                }
+                else if (tmp_array[0] == "START_FRAME")
+                {
                     asf_file.start_frame = atoi(tmp_val.c_str());
-                } else if (tmp_array[0] == "END_FRAME") {
+                }
+                else if (tmp_array[0] == "END_FRAME")
+                {
                     asf_file.end_frame = atoi(tmp_val.c_str());
-                } else if (tmp_array[0] == "SECONDS_PER_FRAME") {
-                    asf_file.seconds_per_frame =  1000*atof(tmp_val.c_str());
-                } else if (tmp_array[0] == "ASCII_DATA") {
+                }
+                else if (tmp_array[0] == "SECONDS_PER_FRAME")
+                {
+                    asf_file.seconds_per_frame = 1000 * atof(tmp_val.c_str());
+                }
+                else if (tmp_array[0] == "ASCII_DATA")
+                {
                     asf_file.ascii_data = tmp_val;
-                } else {
+                }
+                else
+                {
                     asf_file.info[tmp_array[0]] = tmp_val;
                 }
-            } else {
+            }
+            else
+            {
                 //if frame 0 then this line if title new frame.
-                if (!frame) {
+                if (!frame)
+                {
 
                     vector<string> tmp_array;
                     readLine(line, tmp_array, ',');
@@ -151,7 +185,8 @@ bool AsfPlayer::readFile()
                     frame = atoi(tmp_array2[1].c_str());
 
                     //if asf file without timestamp (example 1)
-                    if (tmp_array.size() == 2) {
+                    if (tmp_array.size() == 2)
+                    {
                         vector<string> tmp_array2;
                         readLine(tmp_array[1], tmp_array2, ' ');
                         time = atoi(tmp_array2[2].c_str());
@@ -161,7 +196,9 @@ bool AsfPlayer::readFile()
                     i = 0;
 
                     continue;
-                } else {
+                }
+                else
+                {
                     // read pixels info
                     vector<string> tmp_array;
 
@@ -187,15 +224,111 @@ bool AsfPlayer::readFile()
 }
 
 // show all headers
+
 void AsfPlayer::get_header()
 {
 
     AsfFile::MapType::iterator iter = asf_file.info.begin();
 
-    cout << endl << "FILE_NAME = " << this->filename<< endl;
+    cout << endl << "FILE_NAME = " << this->filename << endl;
 
-    for (iter = asf_file.info.begin(); iter != asf_file.info.end(); iter++) {
+    for (iter = asf_file.info.begin(); iter != asf_file.info.end(); iter++)
+    {
         cout << "[" << (*iter).first << "] = " << (*iter).second << endl;
     }
 
+}
+
+bool AsfPlayer::recordVideo()
+{
+    string file = "example/";
+
+    file += this->filename;
+    file += ".asf";
+
+    ofstream out(file.c_str());
+
+    if (!out)
+    {
+        cout << "Cannot open file.\n";
+        return false;
+    }
+
+    //Шукаю будь-яку камеру
+    CvCapture* capture = cvCreateCameraCapture(CV_CAP_ANY);
+    assert(capture);
+
+    // Виставляю розширення 320 на 240. Бо будь-яке в мене чомусь не виставляється
+    cvSetCaptureProperty(capture, CV_CAP_PROP_FRAME_WIDTH, 320); //1280);
+    cvSetCaptureProperty(capture, CV_CAP_PROP_FRAME_HEIGHT, 240); //960);
+
+    double width = cvGetCaptureProperty(capture, CV_CAP_PROP_FRAME_WIDTH);
+    double height = cvGetCaptureProperty(capture, CV_CAP_PROP_FRAME_HEIGHT);
+
+    IplImage* frame = 0;
+    int number_frame = 1;
+
+    cvNamedWindow("capture", CV_WINDOW_AUTOSIZE);
+
+        // Основні параметри для asf файла
+
+    //Перша стрічка скоріше за все неправильно. Сюди після закінчення зчитування відео я перескочу, для того щоб записати останній фрейм тут треба подумати
+    out << "END_FRAME    " << endl;
+    out << "DATA_TYPE " << "MOVIE" << endl;
+    out << "VERSION " << "NRI Capacitive 1.0-A" << endl;
+    out << "SECONDS_PER_FRAME " << "0.1" << endl;
+    out << "ROWS " << height << endl;
+    out << "COLS " << width << endl;
+    out << "NOISE_THRESHOLD " << 0 << endl;
+    out << "START_FRAME " << 1 << endl;
+    out << "ASCII_DATA " << "@@" << endl;
+
+    //Доки не натиснута кнопка ESC читаються фрейми з камери
+    while (true)
+    {
+        //Пропуск перед фреймом. так треба для правильного зчитування
+        out << endl;
+
+        out << "Frame " << number_frame << " timestamp " << "0" << endl;
+
+        frame = cvQueryFrame(capture);
+
+        IplImage *dst = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 1);
+        
+        //Переводжу в відтінки сірого
+        cvCvtColor(frame, dst, CV_RGB2GRAY);
+
+        for (int i = 0; i < dst->height; i++)
+        {
+            for (int j = 0; j < dst->width; j++)
+            {
+                out << cvGetReal2D(dst, i, j);
+                if (j != dst->width - 1)
+                    out << ",";
+            }
+            out << endl;
+        }
+
+        cvShowImage("capture", dst);
+
+        char c = cvWaitKey(33);
+        //чекаю на ESC
+        if (c == 27)
+        { 
+            break;
+        }
+
+        number_frame++;
+
+    }
+    //Звільняю пам'ять
+    cvReleaseCapture(&capture);
+    cvDestroyWindow("capture");
+
+    //Перескакую на першу позицію і записую номер фрейма. Ну дуже не подобається, але поки не придумав нічого кращого
+    out.seekp(11);
+    out << number_frame << endl;
+    out.close();
+    
+    return true;
 }

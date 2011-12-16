@@ -5,8 +5,6 @@
 AsfFile::AsfFile()
 {
 
-
-
     //initial header array
     this->info["HARDWARE"] = "0";
     this->info["HW_TYPE"] = "MOVIE";
