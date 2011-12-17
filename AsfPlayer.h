@@ -7,8 +7,6 @@
 
 #pragma once
 
-#include "AsfFile.h"
-
 #include <vector>
 
 //openCv
@@ -18,29 +16,20 @@
 
 class AsfPlayer {
 public:
-    AsfPlayer(const std::string&);
 
-    //print list headers
-    void Get_Header();
+    AsfPlayer();
 
-    // read from file
-    bool Read_File();
+    bool Show_Image(unsigned, const std::vector<int> &);
 
-    bool Record_Video();
-
+    int Record_Video(std::vector<int> &);
+    
     bool full_screen;
     bool frame_by_frame;
 
-private:
-    std::string filename;
+    double seconds_per_frame;
+    unsigned int rows;
+    unsigned int cols;
+    unsigned int start_frame;
+    unsigned int end_frame;
 
-    //include asf object
-    AsfFile asf_file;
-
-    bool Show_Image(unsigned);
-
-    void Read_Line(std::string &, std::vector<std::string> &, char);
-
-    //max image
-    std::vector<int> data_image;
 };

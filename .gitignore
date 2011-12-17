@@ -2,5 +2,9 @@
 *.o
 player
 nbproject/
+example/*
+!example/example1.asf
+!example/example2.asf
+!example/example3.asf
 .dep.inc
 Makefile-asf-player.mk

@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include "AsfPlayer.h"
+
 #include <string>
 #include <map>
 
@@ -14,7 +16,18 @@ class AsfFile
 {
 public:
 
-    AsfFile();
+    AsfFile(const std::string&);
+
+    //print list headers
+    void Get_Header();
+
+    // read from file
+    bool Read_File();
+
+    void Set_Full_Screen();
+    void Set_Frame_By_Frame();
+
+    bool Write_File();
 
     //header іnformation
     typedef std::map<std::string, std::string> MapType;
@@ -31,4 +44,14 @@ public:
     unsigned int start_frame;
     unsigned int end_frame;
     std::string ascii_data;
+
+private:
+
+    void Read_Line(std::string &, std::vector<std::string> &, char);
+
+    //max image
+    std::vector<int> data_image;
+
+    std::string filename;
+    AsfPlayer player;
 };

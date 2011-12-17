@@ -5,7 +5,7 @@
 // Created on 23 листопада 2011, 11:43
 //
 
-#include "AsfPlayer.h"
+#include "AsfFile.h"
 
 #include <string>
 #include <cstdlib>
@@ -21,6 +21,7 @@ int main(int argc, char** argv)
 
     int oc;
     string filename = "";
+
     bool full_screen = false;
     bool frame_by_frame = false;
     bool show_headers = false;
@@ -62,9 +63,9 @@ int main(int argc, char** argv)
         case 'w':
             if (optarg)
             {
-                AsfPlayer player(optarg);
+                AsfFile rec(optarg);
                 
-                if (!player.Record_Video()) {
+                if (!rec.Write_File()) {
                     cerr << "Failed to read data" << endl;
                     exit(0);
                 }
@@ -86,21 +87,22 @@ int main(int argc, char** argv)
     if (filename.substr(filename.length() - 4, 4) == ".asf")
     {
         
-        AsfPlayer player(filename);
+        AsfFile play(filename);
 
-        player.full_screen = full_screen;
-        player.frame_by_frame = frame_by_frame;
+        if (full_screen)
+            play.Set_Full_Screen();
 
+        if (frame_by_frame)
+            play.Set_Frame_By_Frame();
         
-
-        if (!player.Read_File())
+        if (!play.Read_File())
         {
             cerr << "Failed to read data" << endl;
             exit(0);
         }
 
         if (show_headers)
-            player.Get_Header();
+            play.Get_Header();
 
     }
     else
