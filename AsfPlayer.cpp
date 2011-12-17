@@ -11,7 +11,7 @@ AsfPlayer::AsfPlayer(const string& file)
 
 }
 
-bool AsfPlayer::show_image(unsigned frame)
+bool AsfPlayer::Show_Image(unsigned frame)
 {
     if (frame >= this->asf_file.start_frame)
     {
@@ -62,7 +62,7 @@ bool AsfPlayer::show_image(unsigned frame)
     return true;
 }
 
-void AsfPlayer::readLine(string & str, vector<string> &array, char split)
+void AsfPlayer::Read_Line(string & str, vector<string> &array, char split)
 {
     istringstream is(str);
     string s;
@@ -71,7 +71,7 @@ void AsfPlayer::readLine(string & str, vector<string> &array, char split)
         array.push_back(s);
 }
 
-bool AsfPlayer::readFile()
+bool AsfPlayer::Read_File()
 {
     string line;
 
@@ -105,7 +105,7 @@ bool AsfPlayer::readFile()
                 if (frame)
                 {
                     // create and show image
-                    if (!show_image(frame))
+                    if (!Show_Image(frame))
                         break;
                 }
 
@@ -122,7 +122,7 @@ bool AsfPlayer::readFile()
             {
                 vector<string> tmp_array;
 
-                readLine(line, tmp_array, ' ');
+                Read_Line(line, tmp_array, ' ');
                 string tmp_val;
 
                 vector<string>::iterator iter = tmp_array.begin() + 1;
@@ -178,17 +178,17 @@ bool AsfPlayer::readFile()
                 {
 
                     vector<string> tmp_array;
-                    readLine(line, tmp_array, ',');
+                    Read_Line(line, tmp_array, ',');
 
                     vector<string> tmp_array2;
-                    readLine(tmp_array[0], tmp_array2, ' ');
+                    Read_Line(tmp_array[0], tmp_array2, ' ');
                     frame = atoi(tmp_array2[1].c_str());
 
                     //if asf file without timestamp (example 1)
                     if (tmp_array.size() == 2)
                     {
                         vector<string> tmp_array2;
-                        readLine(tmp_array[1], tmp_array2, ' ');
+                        Read_Line(tmp_array[1], tmp_array2, ' ');
                         time = atoi(tmp_array2[2].c_str());
                     }
 
@@ -202,7 +202,7 @@ bool AsfPlayer::readFile()
                     // read pixels info
                     vector<string> tmp_array;
 
-                    readLine(line, tmp_array, ',');
+                    Read_Line(line, tmp_array, ',');
 
                     for (unsigned j = 0; j < asf_file.cols; ++j)
                     {
@@ -225,7 +225,7 @@ bool AsfPlayer::readFile()
 
 // show all headers
 
-void AsfPlayer::get_header()
+void AsfPlayer::Get_Header()
 {
 
     AsfFile::MapType::iterator iter = asf_file.info.begin();
@@ -239,7 +239,7 @@ void AsfPlayer::get_header()
 
 }
 
-bool AsfPlayer::recordVideo()
+bool AsfPlayer::Record_Video()
 {
     string file = "example/";
 

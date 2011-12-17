@@ -21,12 +21,12 @@ public:
     AsfPlayer(const std::string&);
 
     //print list headers
-    void get_header();
+    void Get_Header();
 
     // read from file
-    bool readFile();
+    bool Read_File();
 
-    bool recordVideo();
+    bool Record_Video();
 
     bool full_screen;
     bool frame_by_frame;
@@ -37,9 +37,9 @@ private:
     //include asf object
     AsfFile asf_file;
 
-    bool show_image(unsigned);
+    bool Show_Image(unsigned);
 
-    void readLine(std::string &, std::vector<std::string> &, char);
+    void Read_Line(std::string &, std::vector<std::string> &, char);
 
     //max image
     std::vector<int> data_image;

@@ -64,7 +64,7 @@ int main(int argc, char** argv)
             {
                 AsfPlayer player(optarg);
                 
-                if (!player.recordVideo()) {
+                if (!player.Record_Video()) {
                     cerr << "Failed to read data" << endl;
                     exit(0);
                 }
@@ -93,14 +93,14 @@ int main(int argc, char** argv)
 
         
 
-        if (!player.readFile())
+        if (!player.Read_File())
         {
             cerr << "Failed to read data" << endl;
             exit(0);
         }
 
         if (show_headers)
-            player.get_header();
+            player.Get_Header();
 
     }
     else
