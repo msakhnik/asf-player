@@ -18,5 +18,4 @@ AsfFile::AsfFile()
     this->info["UNITS"] = "0";
     this->info["MIRROR_ROW"] = "0";
     this->info["MIRROR_COL"] = "0";
-
 }
