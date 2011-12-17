@@ -10,7 +10,7 @@
 #include <string>
 #include <map>
 
-class AsfFil
+class AsfFile
 {
 public:
 
