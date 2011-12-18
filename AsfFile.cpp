@@ -8,9 +8,8 @@
 using namespace std;
 
 AsfFile::AsfFile(const string& file)
+    : filename (file)
 {
-    
-    this->filename = file;
 
     //initial header array
     this->info["HARDWARE"] = "0";
@@ -41,15 +40,6 @@ bool AsfFile::Read_File()
 {
     string line;
 
-    string str = this->filename;
-
-    //convert string to *char
-    char * writable = new char[str.size() + 1];
-    copy(str.begin(), str.end(), writable);
-    writable[str.size()] = '\0';
-
-    ifstream myfile(writable);
-
     //flag for read data
     // if header is true - read header info
     // if header false - reaad frame data
@@ -59,126 +49,124 @@ bool AsfFile::Read_File()
     int time = 0;
     int i = 0;
 
-    if (myfile.is_open())
+    ifstream myfile(this->filename.c_str());
+    if (!myfile.is_open())
+        return false;
+
+    while (myfile.good())
     {
-        while (myfile.good())
+
+        getline(myfile, line);
+
+        if (line.length() <= 3)
         {
 
-            getline(myfile, line);
-
-            if (line.length() <= 3)
+            if (frame)
             {
-
-                if (frame)
+                if (!initialPlayerData)
                 {
-                    if (!initialPlayerData)
-                    {
-                        player.cols = this->cols;
-                        player.rows = this->rows;
-                        player.seconds_per_frame = this->seconds_per_frame;
-                        player.start_frame = this->start_frame;
-                        player.end_frame = this->end_frame;
-                    }
-                    // create and show image
-                    if (!player.Show_Image(frame, this->data_image))
-                    {
-                        this->data_image.erase(this->data_image.begin(), data_image.end());
-                        break;
-                    }
-
-                    this->data_image.erase(this->data_image.begin(), data_image.end());
+                    player.cols = this->cols;
+                    player.rows = this->rows;
+                    player.seconds_per_frame = this->seconds_per_frame;
+                    player.start_frame = this->start_frame;
+                    player.end_frame = this->end_frame;
+                }
+                // create and show image
+                if (!player.Show_Image(frame, this->data_image))
+                {
+                    this->data_image.clear ();
+                    break;
                 }
 
-                //initial frame data for geting new value
-                frame = 0;
-                time = 0;
-                header = false;
+                this->data_image.clear ();
+            }
+
+            //initial frame data for geting new value
+            frame = 0;
+            time = 0;
+            header = false;
+
+            continue;
+        }
+
+        // read video info and save in global map-array
+        if (header)
+        {
+            vector<string> tmp_array;
+
+            Read_Line(line, tmp_array, ' ');
+            string tmp_val;
+
+            vector<string>::iterator iter = tmp_array.begin() + 1;
+
+            for (iter = tmp_array.begin() + 1; iter != tmp_array.end(); iter++)
+                tmp_val += *iter;
+
+            if (tmp_array[0] == "DATA_TYPE")
+                this->data_type = tmp_val;
+            else if (tmp_array[0] == "VERSION")
+                this->version = tmp_val;
+            else if (tmp_array[0] == "NOISE_THRESHOLD")
+                this->noise_threshold = atoi(tmp_val.c_str());
+            else if (tmp_array[0] == "COLS")
+                this->cols = atoi(tmp_val.c_str());
+            else if (tmp_array[0] == "ROWS")
+                this->rows = atoi(tmp_val.c_str());
+            else if (tmp_array[0] == "START_FRAME")
+                this->start_frame = atoi(tmp_val.c_str());
+            else if (tmp_array[0] == "END_FRAME")
+                this->end_frame = atoi(tmp_val.c_str());
+            else if (tmp_array[0] == "SECONDS_PER_FRAME")
+                this->seconds_per_frame = 1000 * atof(tmp_val.c_str());
+            else if (tmp_array[0] == "ASCII_DATA")
+                this->ascii_data = tmp_val;
+            else
+                this->info[tmp_array[0]] = tmp_val;
+        }
+        else
+        {
+            //if frame 0 then this line if title new frame.
+            if (!frame)
+            {
+
+                vector<string> tmp_array;
+                Read_Line(line, tmp_array, ',');
+
+                vector<string> tmp_array2;
+                Read_Line(tmp_array[0], tmp_array2, ' ');
+                frame = atoi(tmp_array2[1].c_str());
+
+                //if asf file without timestamp (example 1)
+                if (tmp_array.size() == 2)
+                {
+                    vector<string> tmp_array2;
+                    Read_Line(tmp_array[1], tmp_array2, ' ');
+                    time = atoi(tmp_array2[2].c_str());
+                }
+
+                cout << "frame:" << frame << "  timestamp:" << time << endl;
+                i = 0;
 
                 continue;
             }
-
-            // read video info and save in global map-array
-            if (header)
-            {
-                vector<string> tmp_array;
-
-                Read_Line(line, tmp_array, ' ');
-                string tmp_val;
-
-                vector<string>::iterator iter = tmp_array.begin() + 1;
-
-                for (iter = tmp_array.begin() + 1; iter != tmp_array.end(); iter++)
-                    tmp_val += *iter;
-
-                if (tmp_array[0] == "DATA_TYPE")
-                    this->data_type = tmp_val;
-                else if (tmp_array[0] == "VERSION")
-                    this->version = tmp_val;
-                else if (tmp_array[0] == "NOISE_THRESHOLD")
-                    this->noise_threshold = atoi(tmp_val.c_str());
-                else if (tmp_array[0] == "COLS")
-                    this->cols = atoi(tmp_val.c_str());
-                else if (tmp_array[0] == "ROWS")
-                    this->rows = atoi(tmp_val.c_str());
-                else if (tmp_array[0] == "START_FRAME")
-                    this->start_frame = atoi(tmp_val.c_str());
-                else if (tmp_array[0] == "END_FRAME")
-                    this->end_frame = atoi(tmp_val.c_str());
-                else if (tmp_array[0] == "SECONDS_PER_FRAME")
-                    this->seconds_per_frame = 1000 * atof(tmp_val.c_str());
-                else if (tmp_array[0] == "ASCII_DATA")
-                    this->ascii_data = tmp_val;
-                else
-                    this->info[tmp_array[0]] = tmp_val;
-            }
             else
             {
-                //if frame 0 then this line if title new frame.
-                if (!frame)
+                // read pixels info
+                vector<string> tmp_array;
+
+                Read_Line(line, tmp_array, ',');
+
+                for (unsigned j = 0; j < this->cols; ++j)
                 {
-
-                    vector<string> tmp_array;
-                    Read_Line(line, tmp_array, ',');
-
-                    vector<string> tmp_array2;
-                    Read_Line(tmp_array[0], tmp_array2, ' ');
-                    frame = atoi(tmp_array2[1].c_str());
-
-                    //if asf file without timestamp (example 1)
-                    if (tmp_array.size() == 2)
-                    {
-                        vector<string> tmp_array2;
-                        Read_Line(tmp_array[1], tmp_array2, ' ');
-                        time = atoi(tmp_array2[2].c_str());
-                    }
-
-                    cout << "frame:" << frame << "  timestamp:" << time << endl;
-                    i = 0;
-
-                    continue;
-                }
-                else
-                {
-                    // read pixels info
-                    vector<string> tmp_array;
-
-                    Read_Line(line, tmp_array, ',');
-
-                    for (unsigned j = 0; j < this->cols; ++j)
-                    {
-                        this->data_image.push_back(atoi(tmp_array[j].c_str()));
-                    }
-
-                    i++;
+                    this->data_image.push_back(atoi(tmp_array[j].c_str()));
                 }
 
+                i++;
             }
-        }
-        myfile.close();
-    }
-    else
-        return false;
 
+        }
+    }
+    myfile.close();
 
     return true;
 }
@@ -222,7 +210,7 @@ bool AsfFile::Write_File()
 
     if (!out)
     {
-        cout << "Cannot open file.\n";
+        cerr << "Cannot open file." << endl;
         return false;
     }
 
@@ -245,32 +233,31 @@ bool AsfFile::Write_File()
     out << "Frame " << frame << " timestamp 0" << endl;
     frame++;
 
-      for (unsigned int i = 0; i < data_image.size() - 1; i++)
-      {
+    for (unsigned int i = 0; i < data_image.size() - 1; i++)
+    {
+        out << data_image[k];
 
-          out << data_image[k];
-
-          if (n == width)
-          {
-              out << endl;
-              n = 0;
-              m++;
-          }
-          else
-              out << ",";
-
-          if (m == height)
-          {
-              out << "" << endl;
-              m = 0;
-
-              out << "Frame " << frame << " timestamp 0" << endl;
-              frame++;
-          }
-
-            k++;
-            n++;
+        if (n == width)
+        {
+            out << endl;
+            n = 0;
+            m++;
         }
+        else
+            out << ",";
+
+        if (m == height)
+        {
+            out << "" << endl;
+            m = 0;
+
+            out << "Frame " << frame << " timestamp 0" << endl;
+            frame++;
+        }
+
+        k++;
+        n++;
+    }
 
     out.close();
 
