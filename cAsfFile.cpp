@@ -7,28 +7,34 @@
 #include <vector>
 #include <sstream>
 #include <cstdlib>
+#include <ctime>
+
+#include <cv.h>
+#include <highgui.h>
+#include <cxcore.h>
 
 using namespace std;
 
 cAsfFile::cAsfFile(const string& file)
 {
+    
+    _filename = file;
 
-    this->_filename = file;
-    this->_position_for_read = 0;
+    _file = new ifstream(file.c_str());
 
     //initial header array
-    this->info["HARDWARE"] = "0";
-    this->info["HW_TYPE"] = "MOVIE";
-    this->info["SENSOR_TYPE"] = "0";
-    this->info["ROW_SPACING"] = "0";
-    this->info["COL_SPACING"] = "0";
-    this->info["SENSEL_AREA"] = "0";
-    this->info["MICRO_SECOND"] = "0";
-    this->info["TIME"] = "0";
-    this->info["SENSITIVITY"] = "0";
-    this->info["UNITS"] = "0";
-    this->info["MIRROR_ROW"] = "0";
-    this->info["MIRROR_COL"] = "0";
+    info["HARDWARE"] = "0";
+    info["HW_TYPE"] = "MOVIE";
+    info["SENSOR_TYPE"] = "0";
+    info["ROW_SPACING"] = "0";
+    info["COL_SPACING"] = "0";
+    info["SENSEL_AREA"] = "0";
+    info["MICRO_SECOND"] = "0";
+    info["TIME"] = "0";
+    info["SENSITIVITY"] = "0";
+    info["UNITS"] = "0";
+    info["MIRROR_ROW"] = "0";
+    info["MIRROR_COL"] = "0";
 }
 
 bool cAsfFile::ReadHeader()
@@ -36,15 +42,13 @@ bool cAsfFile::ReadHeader()
 
     string line;
 
-    ifstream myfile(this->_filename.c_str());
-
-    if (!myfile.is_open())
+    if (!(*this->_file).is_open())
         return false;
 
-    while (myfile.good())
+    while ((*this->_file).good())
     {
 
-        getline(myfile, line);
+        getline(*this->_file, line);
 
         if (line.length() <= 3)
             break;
@@ -77,45 +81,23 @@ bool cAsfFile::ReadHeader()
 
     }
 
-    //Запам"ятовую позицію, для того щоб починати зчитування фреймів не з початку
-    this->_position_for_read = myfile.tellg();
-
-    myfile.close();
-
     return true;
 }
 
-bool cAsfFile::ReadFrame()
+vector<int> cAsfFile::ReadFrame()
 {
-
+    
     string line;
     vector<int> data_array;
-    unsigned int frame_number = 0;
 
-    ifstream myfile(this->_filename.c_str());
-
-    if (!myfile.is_open())
-        return false;
-
-    //Перескакую на позицію першого фрейма
-    myfile.seekg(this->_position_for_read);
-
-    while (myfile.good())
+    while ((*this->_file).good())
     {
-        getline(myfile, line);
+        getline(*this->_file, line);
 
         if (line.length() <= 3)
         {
-            frame_number++;
             if (!data_array.empty())
-            {
-                cout << "Frame " << frame_number << endl;
-               /////////////////////////////////////////////////////?
-                copy(data_array.begin(), data_array.end(), ostream_iterator<int>(cout, " "));
-                cout << endl;
-                /////////////////////////////////////////////////////
-                data_array.clear();
-            }
+                break;
         }
         else
         {
@@ -130,7 +112,5 @@ bool cAsfFile::ReadFrame()
 
     }
 
-    myfile.close();
-
-    return true;
+    return data_array;
 }

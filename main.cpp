@@ -8,18 +8,11 @@
 #include "cAsfFile.h"
 #include "cAsfPlayer.h"
 
-#include <string>
-#include <cstdlib>
-
-#include <stdio.h>
-#include <unistd.h>
-#include <iostream>
-
 using namespace std;
 
 int main(int argc, char** argv)
 {
-    cAsfFile file("example/example1.asf");
+    cAsfFile file("example/example2.asf");
     cAsfPlayer player(file);
     player.Play();
 

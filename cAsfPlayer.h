@@ -7,8 +7,6 @@
 
 #pragma once
 
-#include <vector>
-
 //openCv
 #include <cv.h>
 #include <highgui.h>
@@ -25,6 +23,10 @@ public:
     bool Play();
 
 private:
+
+    bool ShowFrame();
+    IplImage* img;
+    uchar* data;
 
     cAsfFile _file;
 };

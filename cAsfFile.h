@@ -9,6 +9,8 @@
 
 #include <string>
 #include <map>
+#include <vector>
+#include <fstream>
 
 class cAsfFile
 {
@@ -19,7 +21,7 @@ public:
 
     // read from file
     bool ReadHeader();
-    bool ReadFrame();
+    std::vector<int> ReadFrame();
 
     typedef std::map<std::string, std::string> MapType;
 
@@ -38,6 +40,7 @@ public:
 
 private:
 
+    std::ifstream* _file;
+    
     std::string _filename;
-    unsigned int _position_for_read;
 };
