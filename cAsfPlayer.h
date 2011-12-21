@@ -24,7 +24,7 @@ public:
 
 private:
 
-    bool ShowFrame();
+    bool _ShowFrame();
     IplImage* img;
     uchar* data;
 

@@ -17,7 +17,7 @@ bool cAsfPlayer::Play()
     }
 
     //Читаю і показую по фреймові
-   if (ShowFrame())
+   if (_ShowFrame())
        return true;
    else
    {
@@ -27,7 +27,7 @@ bool cAsfPlayer::Play()
 
 }
 
-bool cAsfPlayer::ShowFrame()
+bool cAsfPlayer::_ShowFrame()
 {
 
     vector<int> data_image;
