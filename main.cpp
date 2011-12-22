@@ -5,8 +5,8 @@
 // Created on 23 листопада 2011, 11:43
 //
 
-#include "cAsfFile.h"
-#include "cAsfPlayer.h"
+#include "AsfFile.h"
+#include "AsfPlayer.h"
 
 using namespace std;
 

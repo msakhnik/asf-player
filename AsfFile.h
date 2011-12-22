@@ -41,6 +41,6 @@ public:
 private:
 
     std::ifstream* _file;
-    
+
     std::string _filename;
 };

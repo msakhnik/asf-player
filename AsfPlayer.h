@@ -7,12 +7,12 @@
 
 #pragma once
 
+#include "AsfFile.h"
+
 //openCv
 #include <cv.h>
 #include <highgui.h>
 #include <cxcore.h>
-
-#include "cAsfFile.h"
 
 class cAsfPlayer
 {

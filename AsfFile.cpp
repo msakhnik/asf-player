@@ -1,4 +1,4 @@
-#include "cAsfFile.h"
+#include "AsfFile.h"
 
 #include <iostream>
 #include <fstream>
@@ -17,7 +17,7 @@ using namespace std;
 
 cAsfFile::cAsfFile(const string& file)
 {
-    
+
     _filename = file;
 
     _file = new ifstream(file.c_str());
@@ -86,7 +86,7 @@ bool cAsfFile::ReadHeader()
 
 vector<int> cAsfFile::ReadFrame()
 {
-    
+
     string line;
     vector<int> data_array;
 
