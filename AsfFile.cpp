@@ -1,4 +1,4 @@
-#include "cAsfFile.h"
+#include "AsfFile.h"
 
 #include <iostream>
 #include <fstream>
@@ -16,12 +16,8 @@
 using namespace std;
 
 cAsfFile::cAsfFile(const string& file)
+    : _file (file.c_str())
 {
-    
-    _filename = file;
-
-    _file = new ifstream(file.c_str());
-
     //initial header array
     info["HARDWARE"] = "0";
     info["HW_TYPE"] = "MOVIE";
@@ -39,16 +35,13 @@ cAsfFile::cAsfFile(const string& file)
 
 bool cAsfFile::ReadHeader()
 {
-
-    string line;
-
-    if (!(*this->_file).is_open())
+    if (!_file.is_open())
         return false;
 
-    while ((*this->_file).good())
+    while (_file.good())
     {
-
-        getline(*this->_file, line);
+        string line;
+        getline(_file, line);
 
         if (line.length() <= 3)
             break;
@@ -78,7 +71,6 @@ bool cAsfFile::ReadHeader()
             this->ascii_data = value;
         else
             this->info[key] = value;
-
     }
 
     return true;
@@ -86,13 +78,13 @@ bool cAsfFile::ReadHeader()
 
 vector<int> cAsfFile::ReadFrame()
 {
-    
+
     string line;
     vector<int> data_array;
 
-    while ((*this->_file).good())
+    while (_file.good())
     {
-        getline(*this->_file, line);
+        getline(_file, line);
 
         if (line.length() <= 3)
         {
