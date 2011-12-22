@@ -1,11 +1,12 @@
 #include "AsfPlayer.h"
+#include "AsfFile.h"
 
 #include <iostream>
 
 using namespace std;
 
-cAsfPlayer::cAsfPlayer(const cAsfFile & file)
-    : _file(file)
+cAsfPlayer::cAsfPlayer(cAsfFile &file)
+    : _file (file)
 {
 }
 
@@ -14,7 +15,7 @@ bool cAsfPlayer::Play()
     //Читаю заголовок
     if (!_file.ReadHeader())
     {
-        cout << "Error reading data\n";
+        cerr << "Error reading header" << endl;
         return false;
     }
 
@@ -23,14 +24,13 @@ bool cAsfPlayer::Play()
         return true;
     else
     {
-        cout << "Error reading data\n";
+        cerr << "Error reading frames" << endl;
         return false;
     }
 }
 
 bool cAsfPlayer::_ShowFrame()
 {
-
     vector<int> data_image;
 
     //Отримую перший фрейм
@@ -79,7 +79,7 @@ bool cAsfPlayer::_ShowFrame()
         //інакше віднімаю отриманий час
         if (time >= this->_file.seconds_per_frame)
         {
-            cout << "Slow playing...\n";
+            cout << "Slow playing..." << endl;
         }
         else
         {

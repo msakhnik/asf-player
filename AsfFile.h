@@ -39,8 +39,6 @@ public:
     std::string ascii_data;
 
 private:
-
-    std::ifstream* _file;
-
     std::string _filename;
+    std::ifstream _file;
 };

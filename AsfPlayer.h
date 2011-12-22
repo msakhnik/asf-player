@@ -7,26 +7,26 @@
 
 #pragma once
 
-#include "AsfFile.h"
-
 //openCv
 #include <cv.h>
 #include <highgui.h>
 #include <cxcore.h>
 
+class cAsfFile;
+
 class cAsfPlayer
 {
 public:
 
-    cAsfPlayer(const cAsfFile &);
+    cAsfPlayer(cAsfFile &);
 
     bool Play();
 
 private:
+    cAsfFile &_file;
 
-    bool _ShowFrame();
     IplImage* img;
     uchar* data;
 
-    cAsfFile _file;
+    bool _ShowFrame();
 };
