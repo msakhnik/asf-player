@@ -2,25 +2,36 @@
 #include "AsfFile.h"
 
 #include <iostream>
+#include <sys/time.h>
 
 using namespace std;
 
-cAsfPlayer::cAsfPlayer(cAsfFile &file)
-    : _file (file)
+cAsfPlayer::cAsfPlayer(cAsfFile &file) : _file(file)
 {
+    SetFullScreen(false);
+    SetFrameByFrame(false);
+
+    _file.ReadHeader();
+
+    img = cvCreateImage(cvSize(_file.GetCols(), _file.GetRows()),IPL_DEPTH_8U, 1);
+
+    data = (uchar *) img->imageData;
+
+    cvNamedWindow("frame", CV_WINDOW_NORMAL);
+
+}
+
+cAsfPlayer::~cAsfPlayer()
+{
+    cvReleaseImage(&img);
+    cvDestroyWindow("image");
 }
 
 bool cAsfPlayer::Play()
 {
-    //Читаю заголовок
-    if (!_file.ReadHeader())
-    {
-        cerr << "Error reading header" << endl;
-        return false;
-    }
 
     //Читаю і показую по фреймові
-    if (_ShowFrame())
+    if (this->_ShowFrame())
         return true;
     else
     {
@@ -41,55 +52,57 @@ bool cAsfPlayer::_ShowFrame()
         return false;
 
     //Ініціалізація вікна для відтворення даних
-    uchar *data;
-    IplImage *img = cvCreateImage(cvSize(this->_file.cols, this->_file.rows), IPL_DEPTH_8U, 1);
-    data = (uchar *) img->imageData;
 
-    cvNamedWindow("frame", CV_WINDOW_NORMAL);
-
-
-    for (unsigned int frame = this->_file.start_frame; frame <= this->_file.end_frame; frame++)
+    for (unsigned int frame = this->_file.GetStartFrame(); frame <= this->_file.GetEndFrame(); ++frame)
     {
         int k = 0;
 
         cout << "Frame: " << frame << endl;
 
-        for (int i = 0; i < (img->height); i++)
+        for (int i = 0; i < (img->height); ++i)
         {
-            for (int j = 0; j < (img->width); j++)
+            for (int j = 0; j < (img->width); ++j)
             {
-                data[i * (img->widthStep) + j * (img->nChannels)] = data_image[k];
-                k++;
+                data[i * (img->widthStep) + j *
+                        (img->nChannels)] = data_image[k];
+                ++k;
             }
         }
+
+        if (this->GetFullScreen())
+            cvSetWindowProperty("frame", CV_WND_PROP_FULLSCREEN, CV_WINDOW_FULLSCREEN);
 
         cvShowImage("frame", img);
 
         //Тут запам'ятовую час для зчитування наступного кадра
-        clock_t t0 = clock();
+        struct timeval t0;
+        if (!this->GetFrameByFrame())
+            gettimeofday(&t0, NULL);
 
         data_image.clear();
         data_image = this->_file.ReadFrame();
 
-        clock_t t1 = clock();
-
-        int time = (double)(t1 - t0) / CLOCKS_PER_SEC * 1000;
-
-        //Якщо зчитувалось довше ніж seconds_per_frame (затримка перед наступним кадром) то виводжу повідомлення про повільне зчитування
-        //інакше віднімаю отриманий час
-        if (time >= this->_file.seconds_per_frame)
+        if (!this->GetFrameByFrame())
         {
-            cout << "Slow playing..." << endl;
+            struct timeval t1;
+            gettimeofday(&t1, NULL);
+
+            int time = (double) (t1.tv_usec - t0.tv_usec) / 1000;
+
+            //Якщо зчитувалось довше ніж seconds_per_frame (затримка перед наступним кадром) то виводжу повідомлення про повільне зчитування
+            //інакше віднімаю отриманий час
+            if (time >= this->_file.GetSecondsPerFrame())
+            {
+                cout << "Slow playing..." << endl;
+            }
+            else
+            {
+                cvWaitKey(this->_file.GetSecondsPerFrame() - time);
+            }
         }
         else
-        {
-            cvWaitKey(this->_file.seconds_per_frame - time);
-        }
-
+            cvWaitKey(0);
     }
-
-    cvReleaseImage(&img);
-    cvDestroyWindow("image");
 
     return true;
 }

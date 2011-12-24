@@ -1,4 +1,5 @@
 #include "AsfFile.h"
+#include "AsfPlayer.h"
 
 #include <iostream>
 #include <fstream>
@@ -16,28 +17,30 @@
 using namespace std;
 
 cAsfFile::cAsfFile(const string& file)
-    : _file (file.c_str())
+        : _file(file.c_str())
 {
     //initial header array
-    info["HARDWARE"] = "0";
-    info["HW_TYPE"] = "MOVIE";
-    info["SENSOR_TYPE"] = "0";
-    info["ROW_SPACING"] = "0";
-    info["COL_SPACING"] = "0";
-    info["SENSEL_AREA"] = "0";
-    info["MICRO_SECOND"] = "0";
-    info["TIME"] = "0";
-    info["SENSITIVITY"] = "0";
-    info["UNITS"] = "0";
-    info["MIRROR_ROW"] = "0";
-    info["MIRROR_COL"] = "0";
+    SetInfo("HARDWARE", "0");
+    SetInfo("HW_TYPE", "MOVIE");
+    SetInfo("SENSOR_TYPE", "0");
+    SetInfo("ROW_SPACING", "0");
+    SetInfo("COL_SPACING", "0");
+    SetInfo("SENSEL_AREA", "0");
+    SetInfo("MICRO_SECOND", "0");
+    SetInfo("TIME", "0");
+    SetInfo("SENSITIVITY", "0");
+    SetInfo("UNITS", "0");
+    SetInfo("MIRROR_ROW", "0");
+    SetInfo("MIRROR_COL", "0");
 }
 
-bool cAsfFile::ReadHeader()
+void cAsfFile::ReadHeader()
 {
     if (!_file.is_open())
-        return false;
-
+    {
+        cerr << "Error reading from file" << endl;
+        exit(1);
+    }
     while (_file.good())
     {
         string line;
@@ -49,31 +52,30 @@ bool cAsfFile::ReadHeader()
         istringstream tmp(line);
         string key, value;
         tmp >> key;
-        value = line.substr(key.length() + 1, line.length() - key.length());
-
+        value = line.substr(key.length() + 1,
+                            line.length() - key.length());
         if (key == "DATA_TYPE")
-            this->data_type = value;
+            this->SetDataType(value);
         else if (key == "VERSION")
-            this->version = value;
+            this->SetVersion(value);
         else if (key == "NOISE_THRESHOLD")
-            this->noise_threshold = atoi(value.c_str());
+            this->SetNoiseThreshold(atoi(value.c_str()));
         else if (key == "COLS")
-            this->cols = atoi(value.c_str());
+            this->SetCols(atoi(value.c_str()));
         else if (key == "ROWS")
-            this->rows = atoi(value.c_str());
+            this->SetRows(atoi(value.c_str()));
         else if (key == "START_FRAME")
-            this->start_frame = atoi(value.c_str());
+            this->SetStartFrame(atoi(value.c_str()));
         else if (key == "END_FRAME")
-            this->end_frame = atoi(value.c_str());
+            this->SetEndFrame(atoi(value.c_str()));
         else if (key == "SECONDS_PER_FRAME")
-            this->seconds_per_frame = 1000 * atof(value.c_str());
+            this->SetSecondsPerFrame(1000 *
+                                     atof(value.c_str()));
         else if (key == "ASCII_DATA")
-            this->ascii_data = value;
+            this->SetAsciiData(value);
         else
-            this->info[key] = value;
+            SetInfo(key, value);
     }
-
-    return true;
 }
 
 vector<int> cAsfFile::ReadFrame()
