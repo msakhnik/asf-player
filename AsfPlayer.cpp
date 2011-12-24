@@ -6,25 +6,27 @@
 
 using namespace std;
 
-cAsfPlayer::cAsfPlayer(cAsfFile &file) : _file(file)
+cAsfPlayer::cAsfPlayer(cAsfFile &file)
+    : _file(file)
+    , _full_screen(false)
+    , _frame_by_frame(false)
 {
-    SetFullScreen(false);
-    SetFrameByFrame(false);
-
+    // FIXME: Analyze error code
     _file.ReadHeader();
 
-    img = cvCreateImage(cvSize(_file.GetCols(), _file.GetRows()),
-                        IPL_DEPTH_8U, 1);
+    // FIXME: What if it can't create a window of the requested size?
+    _img = cvCreateImage(cvSize(_file.GetCols(), _file.GetRows()),
+                         IPL_DEPTH_8U, 1);
 
-    data = (uchar *) img->imageData;
+    // FIXME: Use C++-style cast: static_cast vs reinterpret_cast?
+    _data = (uchar *) _img->imageData;
 
     cvNamedWindow("frame", CV_WINDOW_NORMAL);
-
 }
 
 cAsfPlayer::~cAsfPlayer()
 {
-    cvReleaseImage(&img);
+    cvReleaseImage(&_img);
     cvDestroyWindow("image");
 }
 
@@ -33,22 +35,15 @@ bool cAsfPlayer::Play()
     //Читаю і показую по фреймові
     if (this->_ShowFrame())
         return true;
-    else
-    {
-        cerr << "Error reading frames" << endl;
-        return false;
-    }
+
+    cerr << "Error reading frames" << endl;
+    return false;
 }
 
 bool cAsfPlayer::_ShowFrame()
 {
-    vector<int> data_image;
-
     //Отримую перший фрейм
-    data_image = this->_file.ReadFrame();
-
-    //Якщо пустий рядок це виходжу
-    if (data_image.empty())
+    if (!_file.ReadFrame())
         return false;
 
     //Ініціалізація вікна для відтворення даних
@@ -56,33 +51,39 @@ bool cAsfPlayer::_ShowFrame()
     for (unsigned int frame = this->_file.GetStartFrame();
         frame <= this->_file.GetEndFrame(); ++frame)
     {
-        int k = 0;
-
         cout << "Frame: " << frame << endl;
 
-        for (int i = 0; i < (img->height); ++i)
+        // FIXME: What is this k?
+        int k = 0;
+
+        cAsfFile::FrameT const& image_data = _file.GetLastFrame();
+        for (int i = 0; i < _img->height; ++i)
         {
-            for (int j = 0; j < (img->width); ++j)
+            for (int j = 0; j < _img->width; ++j)
             {
-                data[i * (img->widthStep) + j *
-                        (img->nChannels)] = data_image[k];
+                // FIXME: Is this correct? We can clearly see that the
+                // leftmost columns repeat the right part of a frame.
+                _data[i * _img->widthStep + j * _img->nChannels]
+                    = image_data[k];
                 ++k;
             }
         }
 
+        // FIXME: Don't use accessors for the class's own members.
+        // That's ridiculous.
         if (this->GetFullScreen())
             cvSetWindowProperty("frame", CV_WND_PROP_FULLSCREEN,
                                 CV_WINDOW_FULLSCREEN);
 
-        cvShowImage("frame", img);
+        cvShowImage("frame", _img);
 
         //Тут запам'ятовую час для зчитування наступного кадра
         struct timeval t0;
         if (!this->GetFrameByFrame())
             gettimeofday(&t0, NULL);
 
-        data_image.clear();
-        data_image = this->_file.ReadFrame();
+        // FIXME: Check if the frame was read successfully.
+        _file.ReadFrame();
 
         if (!this->GetFrameByFrame())
         {

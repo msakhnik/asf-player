@@ -17,26 +17,24 @@ class cAsfFile;
 class cAsfPlayer
 {
 public:
-
-    void SetFullScreen(bool flag) {_full_screen = flag; };
-    void SetFrameByFrame(bool flag) {_frame_by_frame = flag; };
-
-    bool GetFullScreen() {return _full_screen; };
-    bool GetFrameByFrame() {return _frame_by_frame;};
-
     cAsfPlayer(cAsfFile &);
     ~cAsfPlayer();
 
     bool Play();
 
+    void SetFullScreen(bool flag) { _full_screen = flag; }
+    void SetFrameByFrame(bool flag) { _frame_by_frame = flag; }
+
+    bool GetFullScreen() const { return _full_screen; }
+    bool GetFrameByFrame() const { return _frame_by_frame; }
+
 private:
     cAsfFile &_file;
-
-    IplImage* img;
-    uchar* data;
-
     bool _full_screen;
     bool _frame_by_frame;
+
+    IplImage* _img;
+    uchar* _data;
 
     bool _ShowFrame();
 };
