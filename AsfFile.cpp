@@ -20,18 +20,18 @@ cAsfFile::cAsfFile(const string& file)
         : _file(file.c_str())
 {
     //initial header array
-    SetInfo("HARDWARE", "0");
-    SetInfo("HW_TYPE", "MOVIE");
-    SetInfo("SENSOR_TYPE", "0");
-    SetInfo("ROW_SPACING", "0");
-    SetInfo("COL_SPACING", "0");
-    SetInfo("SENSEL_AREA", "0");
-    SetInfo("MICRO_SECOND", "0");
-    SetInfo("TIME", "0");
-    SetInfo("SENSITIVITY", "0");
-    SetInfo("UNITS", "0");
-    SetInfo("MIRROR_ROW", "0");
-    SetInfo("MIRROR_COL", "0");
+    _info["HARDWARE"] = "0";
+    _info["HW_TYPE"] = "MOVIE";
+    _info["SENSOR_TYPE"] = "0";
+    _info["ROW_SPACING"] = "0";
+    _info["COL_SPACING"] = "0";
+    _info["SENSEL_AREA"] = "0";
+    _info["MICRO_SECOND"] = "0";
+    _info["TIME"] = "0";
+    _info["SENSITIVITY"] = "0";
+    _info["UNITS"] = "0";
+    _info["MIRROR_ROW"] = "0";
+    _info["MIRROR_COL"] = "0";
 }
 
 void cAsfFile::ReadHeader()
@@ -39,6 +39,8 @@ void cAsfFile::ReadHeader()
     if (!_file.is_open())
     {
         cerr << "Error reading from file" << endl;
+        // FIXME: That's a bad idea, other parts of the code
+        // won't be able to free resources correctly. Use return instead.
         exit(1);
     }
     while (_file.good())
@@ -55,34 +57,33 @@ void cAsfFile::ReadHeader()
         value = line.substr(key.length() + 1,
                             line.length() - key.length());
         if (key == "DATA_TYPE")
-            this->SetDataType(value);
+            this->_data_type = value;
         else if (key == "VERSION")
-            this->SetVersion(value);
+            this->_version = value;
         else if (key == "NOISE_THRESHOLD")
-            this->SetNoiseThreshold(atoi(value.c_str()));
+            this->_noise_threshold = atoi(value.c_str());
         else if (key == "COLS")
-            this->SetCols(atoi(value.c_str()));
+            this->_cols = atoi(value.c_str());
         else if (key == "ROWS")
-            this->SetRows(atoi(value.c_str()));
+            this->_rows = atoi(value.c_str());
         else if (key == "START_FRAME")
-            this->SetStartFrame(atoi(value.c_str()));
+            this->_start_frame = atoi(value.c_str());
         else if (key == "END_FRAME")
-            this->SetEndFrame(atoi(value.c_str()));
+            this->_end_frame = atoi(value.c_str());
         else if (key == "SECONDS_PER_FRAME")
-            this->SetSecondsPerFrame(1000 *
-                                     atof(value.c_str()));
+            this->_seconds_per_frame = 1000 * atof(value.c_str());
         else if (key == "ASCII_DATA")
-            this->SetAsciiData(value);
+            this->_ascii_data = value;
         else
-            SetInfo(key, value);
+            _info[key] = value;
     }
 }
 
-vector<int> cAsfFile::ReadFrame()
+bool cAsfFile::ReadFrame()
 {
+    _last_frame.clear();
 
     string line;
-    vector<int> data_array;
 
     while (_file.good())
     {
@@ -90,7 +91,7 @@ vector<int> cAsfFile::ReadFrame()
 
         if (line.length() <= 3)
         {
-            if (!data_array.empty())
+            if (!_last_frame.empty())
                 break;
         }
         else
@@ -100,11 +101,9 @@ vector<int> cAsfFile::ReadFrame()
             string s;
 
             while (getline(is, s, ','))
-                data_array.push_back(atoi(s.c_str()));
-
+                _last_frame.push_back(atoi(s.c_str()));
         }
-
     }
 
-    return data_array;
+    return !_last_frame.empty();
 }
