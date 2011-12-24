@@ -13,7 +13,8 @@ cAsfPlayer::cAsfPlayer(cAsfFile &file) : _file(file)
 
     _file.ReadHeader();
 
-    img = cvCreateImage(cvSize(_file.GetCols(), _file.GetRows()),IPL_DEPTH_8U, 1);
+    img = cvCreateImage(cvSize(_file.GetCols(), _file.GetRows()),
+                        IPL_DEPTH_8U, 1);
 
     data = (uchar *) img->imageData;
 
@@ -29,7 +30,6 @@ cAsfPlayer::~cAsfPlayer()
 
 bool cAsfPlayer::Play()
 {
-
     //Читаю і показую по фреймові
     if (this->_ShowFrame())
         return true;
@@ -53,7 +53,8 @@ bool cAsfPlayer::_ShowFrame()
 
     //Ініціалізація вікна для відтворення даних
 
-    for (unsigned int frame = this->_file.GetStartFrame(); frame <= this->_file.GetEndFrame(); ++frame)
+    for (unsigned int frame = this->_file.GetStartFrame();
+        frame <= this->_file.GetEndFrame(); ++frame)
     {
         int k = 0;
 
@@ -70,7 +71,8 @@ bool cAsfPlayer::_ShowFrame()
         }
 
         if (this->GetFullScreen())
-            cvSetWindowProperty("frame", CV_WND_PROP_FULLSCREEN, CV_WINDOW_FULLSCREEN);
+            cvSetWindowProperty("frame", CV_WND_PROP_FULLSCREEN,
+                                CV_WINDOW_FULLSCREEN);
 
         cvShowImage("frame", img);
 
@@ -89,7 +91,8 @@ bool cAsfPlayer::_ShowFrame()
 
             int time = (double) (t1.tv_usec - t0.tv_usec) / 1000;
 
-            //Якщо зчитувалось довше ніж seconds_per_frame (затримка перед наступним кадром) то виводжу повідомлення про повільне зчитування
+            //Якщо зчитувалось довше ніж seconds_per_frame (затримка перед
+            //наступним кадром) то виводжу повідомлення про повільне зчитування
             //інакше віднімаю отриманий час
             if (time >= this->_file.GetSecondsPerFrame())
             {

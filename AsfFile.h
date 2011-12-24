@@ -47,7 +47,6 @@ public:
     std::string GetInfo(std::string & key) {return _info[key]; };
 
 private:
-    std::string _filename;
     std::ifstream _file;
 
     MapType _info;

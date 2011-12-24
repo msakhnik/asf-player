@@ -33,7 +33,8 @@ int main(int argc, char** argv)
             cout << endl << "Example:" << endl;
             cout << "./player -p example/example2.asf -f" << endl;
             cout << "or ./player (load default video example1.asf)" << endl;
-            cout << "this created test.asf file into example directory" << endl;
+            cout << "this created test.asf file into example directory"
+                << endl;
 
             return 0;
 
@@ -73,7 +74,8 @@ int main(int argc, char** argv)
     }
     else
     {
-        cerr << "Error syntax is incorrect!\nSyntax: " << argv[ 0 ] << " <file>" << endl;
+        cerr << "Error syntax is incorrect!\nSyntax: " << argv[ 0 ]
+            << " <file>" << endl;
         exit(1);
     }
 
