@@ -138,7 +138,18 @@ bool cAsfPlayer::_ShowFrame()
             }
             else
             {
-                cvWaitKey(this->_file.GetSecondsPerFrame() - time);
+
+//                int key = cvWaitKey(this->_file.GetSecondsPerFrame() - time);
+                
+                    if (cvWaitKey(this->_file.GetSecondsPerFrame() - time) == 'q')
+                    {
+                        cerr << "Video stopped" << endl;
+                        return true;
+                    }
+//                cout <<  key << endl;
+                
+                
+//                cvWaitKey(this->_file.GetSecondsPerFrame() - time == 'q');
             }
         }
         else
