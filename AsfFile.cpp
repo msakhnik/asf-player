@@ -34,15 +34,11 @@ cAsfFile::cAsfFile(const string& file)
     _info["MIRROR_COL"] = "0";
 }
 
-void cAsfFile::ReadHeader()
+bool cAsfFile::ReadHeader()
 {
     if (!_file.is_open())
-    {
-        cerr << "Error reading from file" << endl;
-        // FIXME: That's a bad idea, other parts of the code
-        // won't be able to free resources correctly. Use return instead.
-        exit(1);
-    }
+        return false;
+
     while (_file.good())
     {
         string line;
@@ -77,6 +73,8 @@ void cAsfFile::ReadHeader()
         else
             _info[key] = value;
     }
+
+    return true;
 }
 
 bool cAsfFile::ReadFrame()

@@ -57,11 +57,16 @@ int main(int argc, char** argv)
         filename = "example/example1.asf";
 
     // FIXME: WTF???: ./player -p asd
-    if (filename.substr(filename.length() - 4, 4) == ".asf")
+    // Це відбувається, коли довжина рядка замала
+    
+    if (filename.length() > 4 && filename.substr(filename.length() - 4, 4) == ".asf")
     {
 
         cAsfFile file(filename);
+
         cAsfPlayer player(file);
+        if (!player.Init())
+            return 1;
 
         if (full_screen)
             player.SetFullScreen(true);

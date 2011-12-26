@@ -10,24 +10,49 @@ cAsfPlayer::cAsfPlayer(cAsfFile &file)
     : _file(file)
     , _full_screen(false)
     , _frame_by_frame(false)
-{
-    // FIXME: Analyze error code
-    _file.ReadHeader();
-
-    // FIXME: What if it can't create a window of the requested size?
-    _img = cvCreateImage(cvSize(_file.GetCols(), _file.GetRows()),
-                         IPL_DEPTH_8U, 1);
-
-    // FIXME: Use C++-style cast: static_cast vs reinterpret_cast?
-    _data = (uchar *) _img->imageData;
-
-    cvNamedWindow("frame", CV_WINDOW_NORMAL);
-}
+{}
 
 cAsfPlayer::~cAsfPlayer()
 {
     cvReleaseImage(&_img);
     cvDestroyWindow("image");
+}
+
+// Це мабуть не правильне рішення створювати функцію для ініціалізації.
+// Адже втрачається сама ідея конструктора
+bool cAsfPlayer::Init()
+{
+    if (!_file.ReadHeader())
+    {
+        cerr << "Error reading from file" << endl;
+        return false;
+    }
+
+    int w = _file.GetCols();
+    int h = _file.GetRows();
+
+    // FIXME: What if it can't create a window of the requested size?
+    // Перевіряю ширину висоту і чи _img не NULL
+
+    _img = cvCreateImage(cvSize(_file.GetCols(), _file.GetRows()),
+                         IPL_DEPTH_8U, 1);
+
+    if (!_img && !w && !h)
+    {
+        cerr << "Cannot create a window " << endl;
+        return false;
+    }
+
+    // FIXME: Use C++-style cast: static_cast vs reinterpret_cast?
+    // Я так зрозумів, що для стандартних типів потрібно використовувати
+    //static_cast
+    //а для типів створених користувачем, де вся вина лягає на плечі
+    // програміста - reinterpret_cast.
+    _data = reinterpret_cast<uchar *>(_img->imageData);
+
+    cvNamedWindow("frame", CV_WINDOW_NORMAL);
+
+    return true;
 }
 
 bool cAsfPlayer::Play()

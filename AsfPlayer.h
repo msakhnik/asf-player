@@ -28,6 +28,8 @@ public:
     bool GetFullScreen() const { return _full_screen; }
     bool GetFrameByFrame() const { return _frame_by_frame; }
 
+    bool Init();
+
 private:
     cAsfFile &_file;
     bool _full_screen;

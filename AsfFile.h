@@ -19,7 +19,7 @@ public:
     cAsfFile(const std::string&);
 
     // read from file
-    void ReadHeader();
+    bool ReadHeader();
 
     typedef std::vector<int> FrameT;
     bool ReadFrame ();
