@@ -105,7 +105,7 @@ bool cAsfPlayer::_ShowFrame()
 
         // FIXME: Don't use accessors for the class's own members.
         // That's ridiculous.
-        if (this->GetFullScreen())
+        if (this->_full_screen)
             cvSetWindowProperty("frame", CV_WND_PROP_FULLSCREEN,
                                 CV_WINDOW_FULLSCREEN);
 
@@ -113,7 +113,7 @@ bool cAsfPlayer::_ShowFrame()
 
         //Тут запам'ятовую час для зчитування наступного кадра
         struct timeval t0;
-        if (!this->GetFrameByFrame())
+        if (!this->_frame_by_frame)
             gettimeofday(&t0, NULL);
 
         // FIXME: Check if the frame was read successfully.
@@ -122,7 +122,7 @@ bool cAsfPlayer::_ShowFrame()
             cerr << "Some data is lost" << endl;
         }
 
-        if (!this->GetFrameByFrame())
+        if (!this->_frame_by_frame)
         {
             struct timeval t1;
             gettimeofday(&t1, NULL);
