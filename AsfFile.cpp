@@ -87,7 +87,7 @@ bool cAsfFile::ReadFrame()
     {
         getline(_file, line);
 
-        if (line.length() <= 3)
+        if (line.length() <= 3 || line.substr(0, 5) == "Frame")
         {
             if (!_last_frame.empty())
                 break;

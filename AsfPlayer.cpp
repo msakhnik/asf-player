@@ -84,15 +84,20 @@ bool cAsfPlayer::_ShowFrame()
         // FIXME: What is this k?
 
         cAsfFile::FrameT const& image_data = _file.GetLastFrame();
-
         vector<int>::const_iterator iter = image_data.begin();
 
-        for (int i = 0; i < _img->width; ++i)
+        for (int i = 0; i < _img->height; ++i)
         {
-            for (int j = 0; j < _img->height; ++j)
+            for (int j = 0; j < _img->width; ++j)
             {
                 // FIXME: Is this correct? We can clearly see that the
                 // leftmost columns repeat the right part of a frame.
+                //Дуже цікава помилка була =)
+                //Виявляється дані неправильно зчитувались
+                //Зчитувалась сама назва фрейма
+                //якось конвертувалась і спричиняла зсув
+                //всіх елементів
+
                 _data[i * _img->widthStep + j * _img->nChannels]
                     = *(iter++);
             }
