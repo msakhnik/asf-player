@@ -65,6 +65,7 @@ int main(int argc, char** argv)
         cAsfFile file(filename);
 
         cAsfPlayer player(file);
+        
         if (!player.Init())
             return 1;
 

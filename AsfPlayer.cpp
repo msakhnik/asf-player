@@ -73,24 +73,28 @@ bool cAsfPlayer::_ShowFrame()
 
     //Ініціалізація вікна для відтворення даних
 
-    for (unsigned int frame = this->_file.GetStartFrame();
-        frame <= this->_file.GetEndFrame(); ++frame)
+    unsigned int start = this->_file.GetStartFrame();
+    unsigned int end = this->_file.GetEndFrame();
+
+    for (unsigned int frame = start;
+        frame <= end; ++frame)
     {
         cout << "Frame: " << frame << endl;
 
         // FIXME: What is this k?
-        int k = 0;
 
         cAsfFile::FrameT const& image_data = _file.GetLastFrame();
-        for (int i = 0; i < _img->height; ++i)
+
+        vector<int>::const_iterator iter = image_data.begin();
+
+        for (int i = 0; i < _img->width; ++i)
         {
-            for (int j = 0; j < _img->width; ++j)
+            for (int j = 0; j < _img->height; ++j)
             {
                 // FIXME: Is this correct? We can clearly see that the
                 // leftmost columns repeat the right part of a frame.
                 _data[i * _img->widthStep + j * _img->nChannels]
-                    = image_data[k];
-                ++k;
+                    = *(iter++);
             }
         }
 
@@ -108,7 +112,10 @@ bool cAsfPlayer::_ShowFrame()
             gettimeofday(&t0, NULL);
 
         // FIXME: Check if the frame was read successfully.
-        _file.ReadFrame();
+        if (!_file.ReadFrame() && frame != end)
+        {
+            cerr << "Some data is lost" << endl;
+        }
 
         if (!this->GetFrameByFrame())
         {
