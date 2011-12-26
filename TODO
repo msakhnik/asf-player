@@ -1,1 +1,2 @@
+* Implement long options (--help, --path)
 * Quit program on 'q' for instance
