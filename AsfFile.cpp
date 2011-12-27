@@ -105,3 +105,5 @@ bool cAsfFile::ReadFrame()
 
     return !_last_frame.empty();
 }
+
+// vim: set et ts=4 sw=4:

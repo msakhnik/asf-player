@@ -56,16 +56,14 @@ int main(int argc, char** argv)
     if (filename.empty())
         filename = "example/example1.asf";
 
-    // FIXME: WTF???: ./player -p asd
-    // Це відбувається, коли довжина рядка замала
-    
-    if (filename.length() > 4 && filename.substr(filename.length() - 4, 4) == ".asf")
+    if (filename.length() > 4 &&
+        filename.substr(filename.length() - 4, 4) == ".asf")
     {
 
         cAsfFile file(filename);
 
         cAsfPlayer player(file);
-        
+
         if (!player.Init())
             return 1;
 
@@ -76,7 +74,6 @@ int main(int argc, char** argv)
             player.SetFrameByFrame(true);
 
         player.Play();
-
     }
     else
     {
@@ -87,3 +84,5 @@ int main(int argc, char** argv)
 
     return 0;
 }
+
+// vim: set et ts=4 sw=4:

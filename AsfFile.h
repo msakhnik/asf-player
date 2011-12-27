@@ -57,3 +57,5 @@ private:
     // We keep last frame to avoid constant memory allocation.
     FrameT _last_frame;
 };
+
+// vim: set et ts=4 sw=4:
