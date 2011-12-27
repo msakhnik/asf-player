@@ -39,4 +39,9 @@ private:
     uchar* _data;
 
     bool _ShowFrame();
+
+    // Wait for user input atmost @msec milliseconds
+    int _WaitForKey(int msec = 0);
 };
+
+// vim: set et ts=4 sw=4:

@@ -10,7 +10,8 @@ cAsfPlayer::cAsfPlayer(cAsfFile &file)
     : _file(file)
     , _full_screen(false)
     , _frame_by_frame(false)
-{}
+{
+}
 
 cAsfPlayer::~cAsfPlayer()
 {
@@ -18,8 +19,6 @@ cAsfPlayer::~cAsfPlayer()
     cvDestroyWindow("image");
 }
 
-// Це мабуть не правильне рішення створювати функцію для ініціалізації.
-// Адже втрачається сама ідея конструктора
 bool cAsfPlayer::Init()
 {
     if (!_file.ReadHeader())
@@ -30,24 +29,24 @@ bool cAsfPlayer::Init()
 
     int w = _file.GetCols();
     int h = _file.GetRows();
+    if (!w || !h)
+    {
+        cerr << "Can't reproduce one-dimensional film" << endl;
+        return false;
+    }
 
-    // FIXME: What if it can't create a window of the requested size?
     // Перевіряю ширину висоту і чи _img не NULL
-
     _img = cvCreateImage(cvSize(_file.GetCols(), _file.GetRows()),
                          IPL_DEPTH_8U, 1);
 
-    if (!_img && !w && !h)
+    if (!_img)
     {
         cerr << "Cannot create a window " << endl;
         return false;
     }
 
-    // FIXME: Use C++-style cast: static_cast vs reinterpret_cast?
-    // Я так зрозумів, що для стандартних типів потрібно використовувати
-    //static_cast
-    //а для типів створених користувачем, де вся вина лягає на плечі
-    // програміста - reinterpret_cast.
+    // static_cast працює тільки між сумісними типами. Якщо ж треба
+    // взяти грубо, без reinterpret_cast не обійтися.
     _data = reinterpret_cast<uchar *>(_img->imageData);
 
     cvNamedWindow("frame", CV_WINDOW_NORMAL);
@@ -57,7 +56,7 @@ bool cAsfPlayer::Init()
 
 bool cAsfPlayer::Play()
 {
-    //Читаю і показую по фреймові
+    //Читаю і показую по кадрові
     if (this->_ShowFrame())
         return true;
 
@@ -67,7 +66,7 @@ bool cAsfPlayer::Play()
 
 bool cAsfPlayer::_ShowFrame()
 {
-    //Отримую перший фрейм
+    //Отримую перший кадр
     if (!_file.ReadFrame())
         return false;
 
@@ -81,8 +80,6 @@ bool cAsfPlayer::_ShowFrame()
     {
         cout << "Frame: " << frame << endl;
 
-        // FIXME: What is this k?
-
         cAsfFile::FrameT const& image_data = _file.GetLastFrame();
         vector<int>::const_iterator iter = image_data.begin();
 
@@ -90,21 +87,11 @@ bool cAsfPlayer::_ShowFrame()
         {
             for (int j = 0; j < _img->width; ++j)
             {
-                // FIXME: Is this correct? We can clearly see that the
-                // leftmost columns repeat the right part of a frame.
-                //Дуже цікава помилка була =)
-                //Виявляється дані неправильно зчитувались
-                //Зчитувалась сама назва фрейма
-                //якось конвертувалась і спричиняла зсув
-                //всіх елементів
-
                 _data[i * _img->widthStep + j * _img->nChannels]
                     = *(iter++);
             }
         }
 
-        // FIXME: Don't use accessors for the class's own members.
-        // That's ridiculous.
         if (this->_full_screen)
             cvSetWindowProperty("frame", CV_WND_PROP_FULLSCREEN,
                                 CV_WINDOW_FULLSCREEN);
@@ -113,7 +100,7 @@ bool cAsfPlayer::_ShowFrame()
 
         //Тут запам'ятовую час для зчитування наступного кадра
         struct timeval t0;
-        if (!this->_frame_by_frame)
+        if (!_frame_by_frame)
             gettimeofday(&t0, NULL);
 
         // FIXME: Check if the frame was read successfully.
@@ -122,39 +109,37 @@ bool cAsfPlayer::_ShowFrame()
             cerr << "Some data is lost" << endl;
         }
 
-        if (!this->_frame_by_frame)
+        // How many milliseconds to wait while the frame is being exposed
+        int wait_time (0);
+
+        struct timeval t1;
+        if (!_frame_by_frame)
         {
-            struct timeval t1;
             gettimeofday(&t1, NULL);
-
-            int time = (double) (t1.tv_usec - t0.tv_usec) / 1000;
-
+            int read_time = (t1.tv_usec - t0.tv_usec) / 1000;
             //Якщо зчитувалось довше ніж seconds_per_frame (затримка перед
             //наступним кадром) то виводжу повідомлення про повільне зчитування
             //інакше віднімаю отриманий час
-            if (time >= this->_file.GetSecondsPerFrame())
+            // FIXME: SecondsPerFrame are milliseconds indeed?
+            wait_time = _file.GetSecondsPerFrame() - read_time;
+            if (wait_time < 0)
             {
                 cout << "Slow playing..." << endl;
-            }
-            else
-            {
-
-//                int key = cvWaitKey(this->_file.GetSecondsPerFrame() - time);
-                
-                    if (cvWaitKey(this->_file.GetSecondsPerFrame() - time) == 'q')
-                    {
-                        cerr << "Video stopped" << endl;
-                        return true;
-                    }
-//                cout <<  key << endl;
-                
-                
-//                cvWaitKey(this->_file.GetSecondsPerFrame() - time == 'q');
+                // FIXME: Can we put 0 here?
+                wait_time = 1;
             }
         }
-        else
-            cvWaitKey(0);
+
+        // User input
+        int key = cvWaitKey(wait_time);
+        if ('q' == key)
+        {
+            cout << "Bye!" << endl;
+            return true;
+        }
     }
 
     return true;
 }
+
+// vim: set et ts=4 sw=4:
