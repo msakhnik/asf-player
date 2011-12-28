@@ -13,9 +13,16 @@
 
 using namespace std;
 
+static char const* _Basename(char const* fname)
+{
+    char const* res = strrchr(fname, '/');
+    return res ? res + 1 : fname;
+}
+
 int main(int argc, char** argv)
 {
-    string filename = "";
+    char const* progname = _Basename(argv[0]);
+    string filename;
 
     bool full_screen = false;
     bool frame_by_frame = false;
@@ -44,16 +51,16 @@ int main(int argc, char** argv)
         case 'h':
             cout << "ASF video player\n\n"
                 "Synopsis:\n"
-                "  asf-player [options]\n\n"
+                "  " << progname << " [options]\n\n"
                 "Options:\n"
                 "  -f,--full-screen\tPlay on full screen\n"
                 "  -p,--path\t\tPath to video file\n"
                 "  -b,--frame-by-frame\tShow frame by frame\n"
                 "  -h,--help\t\tThis help message\n\n"
                 "Example:\n"
-                "  ./player -p example/example2.asf -f\n"
-                "  or ./player (load default video example1.asf)\n"
-                "  this creates the file test.asf in the directory 'example'"
+                "  " << progname << " -p example/example2.asf -f\n"
+                "  or " << progname << " (load default video example1.asf)\n"
+                "  this creates a file test.asf in the directory 'example'"
                 << endl;
 
             return 0;
