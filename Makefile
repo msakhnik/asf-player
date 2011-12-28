@@ -3,7 +3,7 @@ SRCS = $(wildcard *.cpp)
 
 OBJS = $(SRCS:.cpp=.o)
 
-MAIN = player
+MAIN = asf-player
 
 ##########################################################################
 
