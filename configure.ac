@@ -16,9 +16,9 @@ PKG_CHECK_MODULES(OPENCV, [
 ], [
   AC_MSG_ERROR([
       You need to install or upgrade the OpenCV development
-      packages on your system. 
+      packages on your system.
       The minimum version required is $OPENCV_REQUIRED.
   ])
 ])
 
-AC_OUTPUT([Makefile src/Makefile])
+AC_OUTPUT([Makefile src/Makefile example/Makefile])
