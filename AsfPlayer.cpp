@@ -29,13 +29,14 @@ bool cAsfPlayer::Init()
 
     int w = _file.GetCols();
     int h = _file.GetRows();
+
+    //check the width and height
     if (!w || !h)
     {
         cerr << "Can't reproduce one-dimensional film" << endl;
         return false;
     }
 
-    // Перевіряю ширину висоту і чи _img не NULL
     _img = cvCreateImage(cvSize(_file.GetCols(), _file.GetRows()),
                          IPL_DEPTH_8U, 1);
 
@@ -45,8 +46,6 @@ bool cAsfPlayer::Init()
         return false;
     }
 
-    // static_cast працює тільки між сумісними типами. Якщо ж треба
-    // взяти грубо, без reinterpret_cast не обійтися.
     _data = reinterpret_cast<uchar *>(_img->imageData);
 
     cvNamedWindow("frame", CV_WINDOW_NORMAL);
@@ -56,7 +55,6 @@ bool cAsfPlayer::Init()
 
 bool cAsfPlayer::Play()
 {
-    //Читаю і показую по кадрові
     if (this->_ShowFrame())
         return true;
 
@@ -66,11 +64,9 @@ bool cAsfPlayer::Play()
 
 bool cAsfPlayer::_ShowFrame()
 {
-    //Отримую перший кадр
+    //Get first frame
     if (!_file.ReadFrame())
         return false;
-
-    //Ініціалізація вікна для відтворення даних
 
     unsigned int start = this->_file.GetStartFrame();
     unsigned int end = this->_file.GetEndFrame();
@@ -91,19 +87,18 @@ bool cAsfPlayer::_ShowFrame()
                     = *(iter++);
             }
         }
-
+        //Check on full screen mode
         if (this->_full_screen)
             cvSetWindowProperty("frame", CV_WND_PROP_FULLSCREEN,
                                 CV_WINDOW_FULLSCREEN);
 
         cvShowImage("frame", _img);
 
-        //Тут запам'ятовую час для зчитування наступного кадра
+        //It remembers the moment  to read the next frame
         struct timeval t0;
         if (!_frame_by_frame)
             gettimeofday(&t0, NULL);
 
-        // FIXME: Check if the frame was read successfully.
         if (!_file.ReadFrame() && frame != end)
         {
             cerr << "Some data is lost" << endl;
@@ -117,15 +112,12 @@ bool cAsfPlayer::_ShowFrame()
         {
             gettimeofday(&t1, NULL);
             int read_time = (t1.tv_usec - t0.tv_usec) / 1000;
-            //Якщо зчитувалось довше ніж seconds_per_frame (затримка перед
-            //наступним кадром) то виводжу повідомлення про повільне зчитування
-            //інакше віднімаю отриманий час
-            // FIXME: SecondsPerFrame are milliseconds indeed?
-            wait_time = _file.GetSecondsPerFrame() - read_time;
-            if (wait_time < 0)
+
+            wait_time = _file.GetMsecPerFrame() - read_time;
+
+            if (wait_time <= 0)
             {
                 cout << "Slow playing..." << endl;
-                // FIXME: Can we put 0 here?
                 wait_time = 1;
             }
         }

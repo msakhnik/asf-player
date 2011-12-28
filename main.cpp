@@ -19,6 +19,25 @@ static char const* _Basename(char const* fname)
     return res ? res + 1 : fname;
 }
 
+static void _ReadHelp(const char * progname)
+{
+    cout << "ASF video player\n\n"
+                "Synopsis:\n"
+                "  " << progname << " [options]\n"
+                "  " << progname <<" [options] [file]\n\n"
+                "Options:\n"
+                "  -f,--full-screen\tPlay on full screen\n"
+                "  -p,--path\t\tPath to video file\n"
+                "  -b,--frame-by-frame\tShow frame by frame\n"
+                "  -h,--help\t\tThis help message\n\n"
+                "Example:\n"
+                "  " << progname << " example/example1.asf\n"
+                "  " << progname << " -p example/example2.asf -f\n"
+                "  or " << progname << " (load default video example1.asf)\n"
+                "  this creates a file test.asf in the directory 'example'"
+                << endl;
+}
+
 int main(int argc, char** argv)
 {
     char const* progname = _Basename(argv[0]);
@@ -27,14 +46,23 @@ int main(int argc, char** argv)
     bool full_screen = false;
     bool frame_by_frame = false;
 
+     if(argc == 1)
+     {
+         _ReadHelp(progname);
+         return 0;
+     }
+
+    int counter = 0;
     while (1)
     {
+        ++counter;
         static struct option long_options[] =
         {
             { "frame-by-frame", no_argument,        0, 'b' },
             { "path",           required_argument,  0, 'p' },
             { "full-screen",    no_argument,        0, 'f' },
             { "help",           no_argument,        0, 'h' },
+            { 0, 0, 0, 0 }
         };
 
         int c = 0;
@@ -49,20 +77,7 @@ int main(int argc, char** argv)
         switch (c)
         {
         case 'h':
-            cout << "ASF video player\n\n"
-                "Synopsis:\n"
-                "  " << progname << " [options]\n\n"
-                "Options:\n"
-                "  -f,--full-screen\tPlay on full screen\n"
-                "  -p,--path\t\tPath to video file\n"
-                "  -b,--frame-by-frame\tShow frame by frame\n"
-                "  -h,--help\t\tThis help message\n\n"
-                "Example:\n"
-                "  " << progname << " -p example/example2.asf -f\n"
-                "  or " << progname << " (load default video example1.asf)\n"
-                "  this creates a file test.asf in the directory 'example'"
-                << endl;
-
+            _ReadHelp(progname);
             return 0;
 
         case 'f':
@@ -83,8 +98,11 @@ int main(int argc, char** argv)
         }
     }
 
-    if (filename.empty())
-        filename = "example/example1.asf";
+    if (argc != counter && filename.empty())
+    {
+        filename = argv[argc - 1];
+        cout << filename << endl;
+    }
 
     if (filename.length() > 4 &&
         filename.substr(filename.length() - 4, 4) == ".asf")

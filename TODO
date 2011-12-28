@@ -6,3 +6,11 @@
 * Switch to GNU autotools for build instead of the simple Makefile
 
 * Implement automatic tests
+
+* Create slider for control playing
+
+* Add method for writing asf-files
+
+* Convert avi or any video-files to asf text file (use ffmpeg)
+
+* add gzip compression mode

@@ -27,7 +27,7 @@ public:
 
     std::string GetDataType() const {return _data_type;};
     std::string GetVersion() const {return _version;};
-    double GetSecondsPerFrame() const {return _seconds_per_frame;};
+    double GetMsecPerFrame() const {return _seconds_per_frame;};
     unsigned int GetRows() const {return _rows;};
     unsigned int GetCols() const {return _cols;};
     int GetNoiseThreshold() const {return _noise_threshold;};
