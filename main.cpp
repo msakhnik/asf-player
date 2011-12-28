@@ -20,50 +20,60 @@ int main(int argc, char** argv)
     bool full_screen = false;
     bool frame_by_frame = false;
 
-    static struct option long_options[] = {
-        {"frame_by_frame", no_argument, 0, 'b'},
-        {"path", required_argument, 0, 'p'},
-        {"full_screen", no_argument, 0, 'f'},
-        {"help", no_argument, 0, 'h'},
-    };
-
-    int c = 0;
-    int option_index = 0;
-
-    c = getopt_long(argc, argv, "bfhp:",
-                    long_options, &option_index);
-
-    if (c == -1)
-        return 1;
-
-    switch (c)
+    while (1)
     {
-    case 'h':
-        cout << "Help!\n"
-            "-f - run on full screen\n"
-            "-p - path to video file\n"
-            "-b - frame by frame\n"
-            "-h - help\n\n"
-            "Example:\n"
-            "./player -p example/example2.asf -f\n"
-            "or ./player (load default video example1.asf)\n"
-            "this created test.asf file into example directory"
-            << endl;
+        static struct option long_options[] =
+        {
+            { "frame-by-frame", no_argument,        0, 'b' },
+            { "path",           required_argument,  0, 'p' },
+            { "full-screen",    no_argument,        0, 'f' },
+            { "help",           no_argument,        0, 'h' },
+        };
 
-        return 0;
+        int c = 0;
+        int option_index = 0;
 
-    case 'f':
-        full_screen = true;
-        break;
-    case 'b':
-        frame_by_frame = true;
-        break;
-    case 'p':
-        filename = optarg;
-        break;
-    default:
-        cerr << "input error" << endl;
-        break;
+        c = getopt_long(argc, argv, "bfhp:",
+                        long_options, &option_index);
+
+        if (c == -1)
+            break;
+
+        switch (c)
+        {
+        case 'h':
+            cout << "ASF video player\n\n"
+                "Synopsis:\n"
+                "  asf-player [options]\n\n"
+                "Options:\n"
+                "  -f,--full-screen\tPlay on full screen\n"
+                "  -p,--path\t\tPath to video file\n"
+                "  -b,--frame-by-frame\tShow frame by frame\n"
+                "  -h,--help\t\tThis help message\n\n"
+                "Example:\n"
+                "  ./player -p example/example2.asf -f\n"
+                "  or ./player (load default video example1.asf)\n"
+                "  this creates the file test.asf in the directory 'example'"
+                << endl;
+
+            return 0;
+
+        case 'f':
+            full_screen = true;
+            break;
+
+        case 'b':
+            frame_by_frame = true;
+            break;
+
+        case 'p':
+            filename = optarg;
+            break;
+
+        default:
+            cerr << "input error" << endl;
+            break;
+        }
     }
 
     if (filename.empty())
