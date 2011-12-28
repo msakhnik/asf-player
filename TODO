@@ -6,3 +6,5 @@
 * Switch to GNU autotools for build instead of the simple Makefile
 
 * Implement automatic tests
+
+* Implement frame scaling
