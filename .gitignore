@@ -1,6 +1,6 @@
 .deps
 *.o
-player
+asf-player
 nbproject/
 example/*
 !example/example1.asf
