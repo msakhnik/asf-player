@@ -27,10 +27,12 @@ static void _ReadHelp(const char *progname)
             "Options:\n"
             "  -f,--full-screen\tPlay on full screen\n"
             "  -b,--frame-by-frame\tShow frame by frame\n"
+            "  -s,--scale\tSet scale\n"
             "  -h,--help\t\tThis help message\n\n"
             "Example:\n"
             "  " << progname << " example/example1.asf\n"
             "  " << progname << " -f example/example2.asf\n"
+            "  " << progname << " -s2 example/example3.asf\n"
             "  this creates a file test.asf in the directory 'example'"
          << endl;
 }
@@ -41,6 +43,7 @@ int main(int argc, char** argv)
 
     bool full_screen = false;
     bool frame_by_frame = false;
+    unsigned int scale = 1;
 
     int counter = 0;
     while (true)
@@ -50,6 +53,7 @@ int main(int argc, char** argv)
         {
             { "frame-by-frame", no_argument,        0, 'b' },
             { "full-screen",    no_argument,        0, 'f' },
+            { "scale",    required_argument,        0, 's' },
             { "help",           no_argument,        0, 'h' },
             { 0, 0, 0, 0 }
         };
@@ -57,7 +61,7 @@ int main(int argc, char** argv)
         int c = 0;
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "bfhp:",
+        c = getopt_long(argc, argv, "bfs:h",
                         long_options, &option_index);
 
         if (c == -1)
@@ -68,6 +72,16 @@ int main(int argc, char** argv)
         case 'h':
             _ReadHelp(progname);
             return 0;
+
+        case 's':
+            scale = atoi(optarg);
+            if (scale < 1 ||  scale > 20)
+            {
+                cerr << "Scale is not valid! Only 1..20 range" << endl;
+                return 1;
+            }
+
+            break;
 
         case 'f':
             full_screen = true;
@@ -108,6 +122,11 @@ int main(int argc, char** argv)
 
     if (full_screen)
         player.SetFullScreen(true);
+    else
+    {
+        if (scale != 1)
+            player.SetScale(scale);
+    }
 
     if (frame_by_frame)
         player.SetFrameByFrame(true);

@@ -14,3 +14,6 @@ configure
 depcomp
 install-sh
 missing
+.dep.inc
+example/test1.asf
+src/player

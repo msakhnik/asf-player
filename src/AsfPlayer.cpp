@@ -10,6 +10,7 @@ cAsfPlayer::cAsfPlayer(cAsfFile &file)
     : _file(file)
     , _full_screen(false)
     , _frame_by_frame(false)
+    , _scale(1)
 {
 }
 
@@ -48,7 +49,7 @@ bool cAsfPlayer::Init()
 
     _data = reinterpret_cast<uchar *>(_img->imageData);
 
-    cvNamedWindow("frame", CV_WINDOW_NORMAL);
+    cvNamedWindow("frame", CV_WINDOW_AUTOSIZE);
 
     return true;
 }
@@ -87,12 +88,25 @@ bool cAsfPlayer::_ShowFrame()
                     = *(iter++);
             }
         }
-        //Check on full screen mode
-        if (this->_full_screen)
-            cvSetWindowProperty("frame", CV_WND_PROP_FULLSCREEN,
-                                CV_WINDOW_FULLSCREEN);
 
-        cvShowImage("frame", _img);
+        if (this->_scale > 1)
+        {
+            IplImage* dst;
+
+            dst = cvCreateImage( cvSize(_img->width*_scale, _img->height*_scale), _img->depth, _img->nChannels );
+            cvResize(_img, dst, 1);
+
+            cvShowImage("frame", dst);
+        }
+        else
+        {
+            //Check on full screen mode
+            if (this->_full_screen)
+                cvSetWindowProperty("frame", CV_WND_PROP_FULLSCREEN,
+                                    CV_WINDOW_FULLSCREEN);
+            
+            cvShowImage("frame", _img);
+        }
 
         //It remembers the moment  to read the next frame
         struct timeval t0;
