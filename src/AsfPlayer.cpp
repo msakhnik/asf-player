@@ -56,7 +56,10 @@ bool cAsfPlayer::Init()
 bool cAsfPlayer::Play()
 {
     if (this->_ShowFrame())
+    {
+        cout << endl;
         return true;
+    }
 
     cerr << "Error reading frames" << endl;
     return false;
@@ -74,7 +77,7 @@ bool cAsfPlayer::_ShowFrame()
     for (unsigned int frame = start;
         frame <= end; ++frame)
     {
-        cout << "Frame: " << frame << endl;
+        cout << "\rFrame: " << frame << flush;
 
         cAsfFile::FrameT const& image_data = _file.GetLastFrame();
         vector<int>::const_iterator iter = image_data.begin();
@@ -101,7 +104,7 @@ bool cAsfPlayer::_ShowFrame()
 
         if (!_file.ReadFrame() && frame != end)
         {
-            cerr << "Some data is lost" << endl;
+            cerr << "\nSome data is lost" << endl;
         }
 
         // How many milliseconds to wait while the frame is being exposed
@@ -117,7 +120,7 @@ bool cAsfPlayer::_ShowFrame()
 
             if (wait_time <= 0)
             {
-                cout << "Slow playing..." << endl;
+                cout << "\nSlow playing..." << endl;
                 wait_time = 1;
             }
         }
@@ -126,7 +129,7 @@ bool cAsfPlayer::_ShowFrame()
         int key = cvWaitKey(wait_time);
         if ('q' == key)
         {
-            cout << "Bye!" << endl;
+            cout << "\nBye!" << endl;
             return true;
         }
     }

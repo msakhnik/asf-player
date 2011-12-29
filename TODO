@@ -1,11 +1,15 @@
-* Implement automatic tests
+* Develop automatic tests
 
 * Implement frame scaling
 
-* Create slider for control playing
+* Control playing with keyboard like in mplayer: <space> to pause, '.' to
+  step through frames
 
 * Add method for writing asf-files
 
 * Convert avi or any video-files to asf text file (use ffmpeg)
 
-* add gzip compression mode
+* Add gzip compression mode
+
+* Build a reusable codec (for instance a gstreamer plugin) based on the same
+  code to watch ASF in the system player.
