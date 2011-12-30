@@ -49,7 +49,12 @@ bool cAsfPlayer::Init()
 
     _data = reinterpret_cast<uchar *>(_img->imageData);
 
-    cvNamedWindow("frame", CV_WINDOW_AUTOSIZE);
+    unsigned int window_size = 0;
+
+    if (!this->_full_screen)
+        window_size = 1;
+
+    cvNamedWindow("frame", window_size);
 
     return true;
 }

@@ -114,9 +114,6 @@ int main(int argc, char** argv)
 
     cAsfPlayer player(file);
 
-    if (!player.Init())
-        return 1;
-
     if (full_screen)
         player.SetFullScreen(true);
     else
@@ -127,6 +124,9 @@ int main(int argc, char** argv)
 
     if (frame_by_frame)
         player.SetFrameByFrame(true);
+
+    if (!player.Init())
+        return 1;
 
     player.Play();
 
