@@ -27,7 +27,7 @@ static void _ReadHelp(const char *progname)
             "Options:\n"
             "  -f,--full-screen\tPlay on full screen\n"
             "  -b,--frame-by-frame\tShow frame by frame\n"
-            "  -s,--scale\tSet scale\n"
+            "  -s,--scale\t\tSet scale\n"
             "  -h,--help\t\tThis help message\n\n"
             "Example:\n"
             "  " << progname << " example/example1.asf\n"
@@ -45,15 +45,13 @@ int main(int argc, char** argv)
     bool frame_by_frame = false;
     unsigned int scale = 1;
 
-    int counter = 0;
     while (true)
     {
-        ++counter;
         static struct option long_options[] =
         {
             { "frame-by-frame", no_argument,        0, 'b' },
             { "full-screen",    no_argument,        0, 'f' },
-            { "scale",    required_argument,        0, 's' },
+            { "scale",          required_argument,  0, 's' },
             { "help",           no_argument,        0, 'h' },
             { 0, 0, 0, 0 }
         };
@@ -75,12 +73,11 @@ int main(int argc, char** argv)
 
         case 's':
             scale = atoi(optarg);
-            if (scale < 1 ||  scale > 20)
+            if (scale < 1 || scale > 20)
             {
                 cerr << "Scale is not valid! Only 1..20 range" << endl;
                 return 1;
             }
-
             break;
 
         case 'f':
@@ -97,13 +94,13 @@ int main(int argc, char** argv)
         }
     }
 
-    if (argc != counter + 1)
+    if (argc != optind + 1)
     {
         cerr << "File name is missing (try --help)" << endl;
         return 1;
     }
 
-    string filename = argv[counter];
+    string filename = argv[optind];
     cout << filename << endl;
 
     if (filename.length() < 4 ||
