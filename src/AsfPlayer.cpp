@@ -92,26 +92,27 @@ bool cAsfPlayer::_ShowFrame()
             }
         }
 
-        if (this->_scale > 1)
+        // Check if it's the full screen mode
+        if (this->_full_screen)
         {
-            IplImage* dst;
-
-            dst = cvCreateImage( cvSize(_img->width*_scale, _img->height*_scale), _img->depth, _img->nChannels );
+            // FIXME: Fullscreen mode doesn't work any more.
+            cvSetWindowProperty("frame", CV_WND_PROP_FULLSCREEN,
+                                CV_WINDOW_FULLSCREEN);
+            cvShowImage("frame", _img);
+        }
+        else
+        {
+            // FIXME: Well yeah, it's created. But who will check if it's
+            // actually created, and who will destroy it???
+            IplImage* dst = cvCreateImage (cvSize (_img->width*_scale,
+                                                   _img->height*_scale),
+                                           _img->depth, _img->nChannels);
             cvResize(_img, dst, 1);
 
             cvShowImage("frame", dst);
         }
-        else
-        {
-            //Check on full screen mode
-            if (this->_full_screen)
-                cvSetWindowProperty("frame", CV_WND_PROP_FULLSCREEN,
-                                    CV_WINDOW_FULLSCREEN);
-            
-            cvShowImage("frame", _img);
-        }
 
-        //It remembers the moment  to read the next frame
+        // Remember the moment to read the next frame
         struct timeval t0;
         if (!_frame_by_frame)
             gettimeofday(&t0, NULL);
