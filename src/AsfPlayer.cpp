@@ -10,6 +10,7 @@ cAsfPlayer::cAsfPlayer(cAsfFile &file)
     : _file(file)
     , _full_screen(false)
     , _frame_by_frame(false)
+    , _track(false)
     , _scale(1)
 {
 }
@@ -23,6 +24,12 @@ cAsfPlayer::~cAsfPlayer()
 bool cAsfPlayer::Init()
 {
     if (!_file.ReadHeader())
+    {
+        cerr << "Error reading from file" << endl;
+        return false;
+    }
+
+    if (!_file.SetPositionFrame())
     {
         cerr << "Error reading from file" << endl;
         return false;
@@ -71,6 +78,12 @@ bool cAsfPlayer::Play()
     return false;
 }
 
+static void TrackbarCallback(int pos, void* obj)
+{
+        static cAsfPlayer* myObj = (cAsfPlayer*) obj;
+        myObj->GetFile().ChangePosition(pos);
+}
+
 bool cAsfPlayer::_ShowFrame()
 {
     //Get first frame
@@ -80,10 +93,31 @@ bool cAsfPlayer::_ShowFrame()
     unsigned int start = this->_file.GetStartFrame();
     unsigned int end = this->_file.GetEndFrame();
 
+    //Need for look change frame on skip event;
+    unsigned int check_frame = start;
+
     for (unsigned int frame = start;
         frame <= end; ++frame)
     {
         cout << "\rFrame: " << frame << flush;
+
+        //time how we get when reading additionally Frame
+        int adition_time = 0;
+        //If we changed position
+        if ( frame - check_frame != 0)
+        {
+            struct timeval t0;
+            gettimeofday(&t0, NULL);
+
+            if (!_file.ReadFrame() && frame != end)
+                cerr << "\nSome data is lost" << endl;
+
+            struct timeval t1;
+            gettimeofday(&t1, NULL);
+
+            adition_time = (t1.tv_usec - t0.tv_usec) / 1000;
+
+        }
 
         cAsfFile::FrameT const& image_data = _file.GetLastFrame();
         vector<int>::const_iterator iter = image_data.begin();
@@ -96,6 +130,11 @@ bool cAsfPlayer::_ShowFrame()
                     = *(iter++);
             }
         }
+
+        //put trackbar in top
+        if (_track)
+            cvCreateTrackbar2("Position", "frame", reinterpret_cast<int*>
+                (&frame), static_cast<int>(end), TrackbarCallback, this);
 
         // Check if it's the full screen mode
         if (this->_full_screen)
@@ -115,6 +154,8 @@ bool cAsfPlayer::_ShowFrame()
             cvResize(_img, dst, 1);
 
             cvShowImage("frame", dst);
+
+            cvReleaseImage(&dst);
         }
 
         // Remember the moment to read the next frame
@@ -136,7 +177,7 @@ bool cAsfPlayer::_ShowFrame()
             gettimeofday(&t1, NULL);
             int read_time = (t1.tv_usec - t0.tv_usec) / 1000;
 
-            wait_time = _file.GetMsecPerFrame() - read_time;
+            wait_time = _file.GetMsecPerFrame() - read_time - adition_time;
 
             if (wait_time <= 0)
             {
@@ -152,6 +193,12 @@ bool cAsfPlayer::_ShowFrame()
             cout << "\nBye!" << endl;
             return true;
         }
+        else if (32 == key)
+        {
+            cvWaitKey(0);
+        }
+
+        ++check_frame;
     }
 
     return true;

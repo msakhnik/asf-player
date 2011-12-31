@@ -22,8 +22,10 @@ public:
     bool ReadHeader();
 
     typedef std::vector<int> FrameT;
-    bool ReadFrame ();
+    bool ReadFrame();
     FrameT const& GetLastFrame() const { return _last_frame; }
+    bool SetPositionFrame();
+    void ChangePosition(unsigned int);
 
     std::string const& GetDataType() const { return _data_type; }
     std::string const& GetVersion() const { return _version; }
@@ -56,6 +58,8 @@ private:
 
     // We keep last frame to avoid constant memory allocation.
     FrameT _last_frame;
+
+    std::vector<unsigned long int> _frame_position;
 };
 
 // vim: set et ts=4 sw=4:

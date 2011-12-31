@@ -76,6 +76,56 @@ bool cAsfFile::ReadHeader()
 
     return true;
 }
+//Static func for parsing input line and returning number of frame
+static unsigned int GetNumberFrame(string & str)
+{
+    string::size_type pos = str.find(",");
+    string frame_line = str.substr(0, pos);
+    pos = str.find(" ");
+
+    return atoi(str.substr(pos + 1, frame_line.length()).c_str());
+}
+//Store position all frames
+bool cAsfFile::SetPositionFrame()
+{
+    this->_frame_position.resize(this->_end_frame);
+    fill (this->_frame_position.begin(), this->_frame_position.end(), 0);
+
+    string line;
+
+    if (!_file.is_open())
+        return false;
+
+    while (_file.good())
+    {
+        getline(_file, line);
+
+        unsigned int row = 0;
+        if (line.substr(0, 5) == "Frame")
+        {
+            //parse string and get number of current frame
+            //set in array current position
+            int skip = _file.tellg();
+            row = GetNumberFrame(line);
+            _frame_position[row] = skip - line.length() - 1;
+
+            if (row == _end_frame - 1)
+            {
+                _file.seekg(_frame_position[1]);
+                _frame_position[0] = _frame_position[1];
+                return true;
+            }
+        }
+    }
+
+    return true;
+}
+//This func call from trackbar and control key
+void cAsfFile::ChangePosition(unsigned int pos)
+{
+    if (this->_frame_position[pos])
+        this->_file.seekg(this->_frame_position[pos]);
+}
 
 bool cAsfFile::ReadFrame()
 {
