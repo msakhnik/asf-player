@@ -1,10 +1,5 @@
 * Develop automatic tests
 
-* Implement frame scaling
-
-* Control playing with keyboard like in mplayer: <space> to pause, '.' to
-  step through frames
-
 * Add method for writing asf-files
 
 * Convert avi or any video-files to asf text file (use ffmpeg)
@@ -15,3 +10,7 @@
   code to watch ASF in the system player.
 
 * Put License notice to the file header
+
+* Fixed bug with closing window
+
+* Add modifiedcontrol panel. Add "<" button
