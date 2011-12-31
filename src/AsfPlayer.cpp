@@ -80,8 +80,12 @@ bool cAsfPlayer::Play()
 
 static void TrackbarCallback(int pos, void* obj)
 {
-        static cAsfPlayer* myObj = (cAsfPlayer*) obj;
-        myObj->GetFile().ChangePosition(pos);
+    static cAsfPlayer* playerObj = (cAsfPlayer*) obj;
+    if (pos >= static_cast<int>(playerObj->GetFile().GetStartFrame())
+            && pos <= static_cast<int>(playerObj->GetFile().GetEndFrame()))
+    {
+        playerObj->GetFile().ChangePosition(pos);
+    }
 }
 
 bool cAsfPlayer::_ShowFrame()
@@ -95,6 +99,8 @@ bool cAsfPlayer::_ShowFrame()
 
     //Need for look change frame on skip event;
     unsigned int check_frame = start;
+
+    bool pause = false; //for play/pause
 
     for (unsigned int frame = start;
         frame <= end; ++frame)
@@ -177,9 +183,10 @@ bool cAsfPlayer::_ShowFrame()
             gettimeofday(&t1, NULL);
             int read_time = (t1.tv_usec - t0.tv_usec) / 1000;
 
-            wait_time = _file.GetMsecPerFrame() - read_time - adition_time;
+            if (!pause)
+                wait_time = _file.GetMsecPerFrame() - read_time - adition_time;
 
-            if (wait_time <= 0)
+            if (wait_time < 0)
             {
                 cout << "\nSlow playing..." << endl;
                 wait_time = 1;
@@ -188,14 +195,22 @@ bool cAsfPlayer::_ShowFrame()
 
         // User input
         int key = cvWaitKey(wait_time);
-        if ('q' == key)
+
+        if (key == 113) // "q"
         {
             cout << "\nBye!" << endl;
             return true;
         }
-        else if (32 == key)
+        else if (key == 46) // "."
         {
-            cvWaitKey(0);
+            TrackbarCallback(frame, this);
+        }
+        else if (key == 32) // "space"
+        {
+            if (pause)
+                pause = false;
+            else
+                pause = true;
         }
 
         ++check_frame;
