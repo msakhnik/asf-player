@@ -83,6 +83,7 @@ static void TrackbarCallback(int pos, void* obj)
     }
 }
 
+// FIXME: This function is too larse, split it!
 bool cAsfPlayer::_ShowFrame()
 {
     //Get first frame
@@ -193,21 +194,25 @@ bool cAsfPlayer::_ShowFrame()
         // User input
         int key = cvWaitKey(wait_time);
 
-        if (key == 113) // "q"
+        switch (key)
         {
+        case -1: // Timeout
+            break;
+        case 'q':
             cout << "\nBye!" << endl;
             return true;
-        }
-        else if (key == 46) // "."
-        {
-            TrackbarCallback(frame, this);
-        }
-        else if (key == 32) // "space"
-        {
-            if (pause)
-                pause = false;
-            else
+        case '.':
+            if (!pause)
                 pause = true;
+            TrackbarCallback(frame, this);
+            break;
+        case ' ':
+            pause = !pause;
+            break;
+        default:
+            // FIXME: So we may underexpose a frame if user crushes
+            // the keyboard. Implement absolute time point for frames.
+            break;
         }
 
         ++check_frame;
