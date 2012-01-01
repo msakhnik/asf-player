@@ -56,12 +56,7 @@ bool cAsfPlayer::Init()
 
     _data = reinterpret_cast<uchar *>(_img->imageData);
 
-    unsigned int window_size = 0;
-
-    if (!this->_full_screen)
-        window_size = 1;
-
-    cvNamedWindow("frame", window_size);
+    cvNamedWindow("frame", _full_screen ? 0 : 1);
 
     return true;
 }
@@ -88,6 +83,7 @@ static void TrackbarCallback(int pos, void* obj)
     }
 }
 
+// FIXME: This function is too larse, split it!
 bool cAsfPlayer::_ShowFrame()
 {
     //Get first frame
@@ -145,15 +141,13 @@ bool cAsfPlayer::_ShowFrame()
         // Check if it's the full screen mode
         if (this->_full_screen)
         {
-            // FIXME: Fullscreen mode doesn't work any more.
             cvSetWindowProperty("frame", CV_WND_PROP_FULLSCREEN,
                                 CV_WINDOW_FULLSCREEN);
             cvShowImage("frame", _img);
         }
         else
         {
-            // FIXME: Well yeah, it's created. But who will check if it's
-            // actually created, and who will destroy it???
+            // FIXME: Handle allocation errors!
             IplImage* dst = cvCreateImage (cvSize (_img->width*_scale,
                                                    _img->height*_scale),
                                            _img->depth, _img->nChannels);
@@ -181,6 +175,10 @@ bool cAsfPlayer::_ShowFrame()
         if (!_frame_by_frame)
         {
             gettimeofday(&t1, NULL);
+            // FIXME: Take into account .tv_sec and other fields.
+            // Because when a lag occurs on a second overfull, usec
+            // start counting from 0. In fact, I've never seen the message
+            // "Slow playing" so far.
             int read_time = (t1.tv_usec - t0.tv_usec) / 1000;
 
             if (!pause)
@@ -196,21 +194,25 @@ bool cAsfPlayer::_ShowFrame()
         // User input
         int key = cvWaitKey(wait_time);
 
-        if (key == 113) // "q"
+        switch (key)
         {
+        case -1: // Timeout
+            break;
+        case 'q':
             cout << "\nBye!" << endl;
             return true;
-        }
-        else if (key == 46) // "."
-        {
-            TrackbarCallback(frame, this);
-        }
-        else if (key == 32) // "space"
-        {
-            if (pause)
-                pause = false;
-            else
+        case '.':
+            if (!pause)
                 pause = true;
+            TrackbarCallback(frame, this);
+            break;
+        case ' ':
+            pause = !pause;
+            break;
+        default:
+            // FIXME: So we may underexpose a frame if user crushes
+            // the keyboard. Implement absolute time point for frames.
+            break;
         }
 
         ++check_frame;
