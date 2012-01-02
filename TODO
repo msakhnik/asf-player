@@ -1,7 +1,3 @@
-* More accurate time accounting. It's better to remember the absolute time
-  when to show a frame, and then compare current time with it, than to
-  count time differences manually.
-
 * Change frame instantly when the trackbar is moved
 
 * Let the trackbar show time mm:ss instead of frame number or at least two
@@ -21,5 +17,3 @@
 * Put License notice to the file header
 
 * Fix bug with closing window
-
-* Add modifiedcontrol panel. Add "<" button

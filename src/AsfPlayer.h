@@ -41,9 +41,14 @@ private:
     unsigned int _scale;
 
     IplImage* _img;
+    IplImage* _dst;
     uchar* _data;
 
     bool _ShowFrame();
+    void _FillImgData();
+    void _SetPlayerOptions(unsigned int &, unsigned int &);
+    int _ProcessKey(int, unsigned int &, bool &);
+    void _CheckFrame();
 
     // Wait for user input atmost @msec milliseconds
     int _WaitForKey(int msec = 0);

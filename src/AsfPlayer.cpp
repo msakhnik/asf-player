@@ -2,6 +2,7 @@
 #include "AsfFile.h"
 
 #include <iostream>
+#include <stdlib.h>
 #include <sys/time.h>
 
 using namespace std;
@@ -18,6 +19,7 @@ cAsfPlayer::cAsfPlayer(cAsfFile &file)
 cAsfPlayer::~cAsfPlayer()
 {
     cvReleaseImage(&_img);
+    cvReleaseImage(&_dst);
     cvDestroyWindow("image");
 }
 
@@ -48,7 +50,11 @@ bool cAsfPlayer::Init()
     _img = cvCreateImage(cvSize(_file.GetCols(), _file.GetRows()),
                          IPL_DEPTH_8U, 1);
 
-    if (!_img)
+    IplImage* _dst = cvCreateImage(cvSize(_img->width*_scale,
+                                         _img->height * _scale),
+                                  _img->depth, _img->nChannels);
+
+    if (!_img || !_dst)
     {
         cerr << "Cannot create a window " << endl;
         return false;
@@ -57,6 +63,11 @@ bool cAsfPlayer::Init()
     _data = reinterpret_cast<uchar *>(_img->imageData);
 
     cvNamedWindow("frame", _full_screen ? 0 : 1);
+
+    // Check if it's the full screen mode
+    if (this->_full_screen)
+        cvSetWindowProperty("frame", CV_WND_PROP_FULLSCREEN,
+                            CV_WINDOW_FULLSCREEN);
 
     return true;
 }
@@ -83,142 +94,148 @@ static void TrackbarCallback(int pos, void* obj)
     }
 }
 
-// FIXME: This function is too larse, split it!
-bool cAsfPlayer::_ShowFrame()
+void cAsfPlayer::_FillImgData()
 {
-    //Get first frame
-    if (!_file.ReadFrame())
-        return false;
+    cAsfFile::FrameT const& image_data = _file.GetLastFrame();
+    vector<int>::const_iterator iter = image_data.begin();
 
-    unsigned int start = this->_file.GetStartFrame();
-    unsigned int end = this->_file.GetEndFrame();
-
-    //Need for look change frame on skip event;
-    unsigned int check_frame = start;
-
-    bool pause = false; //for play/pause
-
-    for (unsigned int frame = start;
-        frame <= end; ++frame)
+    for (int i = 0; i < _img->height; ++i)
     {
-        cout << "\rFrame: " << frame << flush;
-
-        //time how we get when reading additionally Frame
-        int adition_time = 0;
-        //If we changed position
-        if ( frame - check_frame != 0)
+        for (int j = 0; j < _img->width; ++j)
         {
-            struct timeval t0;
-            gettimeofday(&t0, NULL);
-
-            if (!_file.ReadFrame() && frame != end)
-                cerr << "\nSome data is lost" << endl;
-
-            struct timeval t1;
-            gettimeofday(&t1, NULL);
-
-            adition_time = (t1.tv_usec - t0.tv_usec) / 1000;
-
+            _data[i * _img->widthStep + j * _img->nChannels]
+                = *(iter++);
         }
+    }
+}
 
-        cAsfFile::FrameT const& image_data = _file.GetLastFrame();
-        vector<int>::const_iterator iter = image_data.begin();
+void cAsfPlayer::_SetPlayerOptions(unsigned int &frame, unsigned int & end)
+{
+    //put trackbar in top
+    if (_track)
+        cvCreateTrackbar2("Position", "frame", reinterpret_cast<int*>
+                          (&frame), static_cast<int> (end), TrackbarCallback, this);
+    if (_scale)
+    {
+        _dst = cvCreateImage(cvSize(_img->width*_scale,
+                                    _img->height * _scale),
+                             _img->depth, _img->nChannels);
+        cvResize(_img, _dst, 1);
+    }
+}
 
-        for (int i = 0; i < _img->height; ++i)
-        {
-            for (int j = 0; j < _img->width; ++j)
-            {
-                _data[i * _img->widthStep + j * _img->nChannels]
-                    = *(iter++);
-            }
-        }
-
-        //put trackbar in top
-        if (_track)
-            cvCreateTrackbar2("Position", "frame", reinterpret_cast<int*>
-                (&frame), static_cast<int>(end), TrackbarCallback, this);
-
-        // Check if it's the full screen mode
-        if (this->_full_screen)
-        {
-            cvSetWindowProperty("frame", CV_WND_PROP_FULLSCREEN,
-                                CV_WINDOW_FULLSCREEN);
-            cvShowImage("frame", _img);
-        }
-        else
-        {
-            // FIXME: Handle allocation errors!
-            IplImage* dst = cvCreateImage (cvSize (_img->width*_scale,
-                                                   _img->height*_scale),
-                                           _img->depth, _img->nChannels);
-            cvResize(_img, dst, 1);
-
-            cvShowImage("frame", dst);
-
-            cvReleaseImage(&dst);
-        }
-
-        // Remember the moment to read the next frame
-        struct timeval t0;
-        if (!_frame_by_frame)
-            gettimeofday(&t0, NULL);
-
-        if (!_file.ReadFrame() && frame != end)
-        {
-            cerr << "\nSome data is lost" << endl;
-        }
-
-        // How many milliseconds to wait while the frame is being exposed
-        int wait_time (0);
-
-        struct timeval t1;
-        if (!_frame_by_frame)
-        {
-            gettimeofday(&t1, NULL);
-            // FIXME: Take into account .tv_sec and other fields.
-            // Because when a lag occurs on a second overfull, usec
-            // start counting from 0. In fact, I've never seen the message
-            // "Slow playing" so far.
-            int read_time = (t1.tv_usec - t0.tv_usec) / 1000;
-
-            if (!pause)
-                wait_time = _file.GetMsecPerFrame() - read_time - adition_time;
-
-            if (wait_time < 0)
-            {
-                cout << "\nSlow playing..." << endl;
-                wait_time = 1;
-            }
-        }
-
-        // User input
-        int key = cvWaitKey(wait_time);
-
-        switch (key)
-        {
-        case -1: // Timeout
-            break;
-        case 'q':
-            cout << "\nBye!" << endl;
-            return true;
-        case '.':
-            if (!pause)
-                pause = true;
-            TrackbarCallback(frame, this);
-            break;
-        case ' ':
-            pause = !pause;
-            break;
-        default:
-            // FIXME: So we may underexpose a frame if user crushes
-            // the keyboard. Implement absolute time point for frames.
-            break;
-        }
-
-        ++check_frame;
+int cAsfPlayer::_ProcessKey(int key, unsigned int & frame, bool & pause)
+{
+    int exit_flag = 0;
+    switch (key)
+    {
+    case -1: // Timeout
+        exit_flag = 0; //repeat
+        break;
+    case 'q':
+        cout << "\nBye!" << endl;
+        exit_flag = 1;//good exit
+        break;
+    case ',':
+        if (!pause)
+            pause = true;
+        frame -= 2;
+        TrackbarCallback(frame, this);
+        exit_flag = 2; //do next
+        break;
+    case '.':
+        if (!pause)
+            pause = true;
+        TrackbarCallback(frame, this);
+        exit_flag = 2; //do next
+        break;
+    case ' ':
+        pause = !pause;
+        exit_flag = 2;
+        break;
+    default:
+        exit_flag = 0;
+        break;
     }
 
-    return true;
+    return exit_flag;
+}
+
+void cAsfPlayer::_CheckFrame()
+{
+    if (!_file.ReadFrame())
+        cerr << "\nSome data is lost" << endl;
+}
+
+bool cAsfPlayer::_ShowFrame()
+{
+    unsigned int frame = this->_file.GetStartFrame()
+                        , end_frame = this->_file.GetEndFrame()
+                        , check_position = this->_file.GetStartFrame() - 1;
+                        ;
+    bool pause = false; //for play/pause
+    int delay = _file.GetMsecPerFrame() * 1000;
+
+    struct timeval frame_duration;
+    frame_duration.tv_sec = 0;
+    frame_duration.tv_usec = delay;
+
+    _CheckFrame();
+
+    while (frame <= end_frame)
+    {
+        struct timeval frame_deadline;
+        gettimeofday(&frame_deadline, NULL); // Show the first frame right now
+
+        timeradd(&frame_deadline, &frame_duration, &frame_deadline);
+
+        if (frame - check_position != 1)
+        {
+            _CheckFrame();
+            check_position = frame;
+        }
+
+        _FillImgData();
+        _SetPlayerOptions(frame, end_frame);
+
+        cvShowImage("frame", _full_screen ? _img : _dst);
+
+        if (frame != end_frame)
+            _CheckFrame();
+
+        struct timeval now;
+        gettimeofday(&now, NULL);
+
+        int wait_time = 1; //minimum delay
+
+        if (timercmp(&now, &frame_deadline, <))
+        {
+            struct timeval new_time;
+
+            timersub(&frame_deadline, &now, &new_time);
+            wait_time = frame_duration.tv_sec * 1000 +
+                                frame_duration.tv_usec / 1000;
+        }
+        else
+            cerr << "\nSlow playing..." << endl;
+
+        int key = 0;
+
+        if (pause || _frame_by_frame)
+            while(!(key = _ProcessKey(cvWaitKey(0), frame, pause)))
+            {
+            }
+        else
+            key = _ProcessKey(cvWaitKey(wait_time), frame, pause);
+
+        if (key == 1)
+            return true;
+
+        ++check_position;
+        ++frame;
+    }
+
+return true;
 }
 
 // vim: set et ts=4 sw=4:
