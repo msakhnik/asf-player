@@ -148,7 +148,7 @@ void cAsfFile::ChangePosition(unsigned int pos)
         this->_file.seekg(this->_frame_position[pos]);
 }
 
-bool cAsfFile::ReadFrame()
+void cAsfFile::ReadFrame()
 {
     _last_frame.clear();
 
@@ -174,7 +174,8 @@ bool cAsfFile::ReadFrame()
         }
     }
 
-    return !_last_frame.empty();
+    if (_last_frame.empty())
+        cerr << "\nSome data is lost" << endl;;
 }
 
 // vim: set et ts=4 sw=4:

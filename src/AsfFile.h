@@ -36,7 +36,7 @@ public:
     bool ReadHeader();
 
     typedef std::vector<int> FrameT;
-    bool ReadFrame();
+    void ReadFrame();
     FrameT const& GetLastFrame() const { return _last_frame; }
     bool SetPositionFrame();
     void ChangePosition(unsigned int);

@@ -25,6 +25,7 @@
 #include <cv.h>
 #include <highgui.h>
 #include <cxcore.h>
+#include <stdlib.h>
 
 class cAsfFile;
 
@@ -62,7 +63,9 @@ private:
     void _FillImgData();
     void _SetPlayerOptions(unsigned int &, unsigned int &);
     int _ProcessKey(int, unsigned int &, bool &);
-    void _CheckFrame();
+    bool _ControlKey(unsigned int &, timeval &);
+    void _SetFirstTime(timeval &, timeval &);
+    int _GetWaitTime(timeval &);
 
     // Wait for user input atmost @msec milliseconds
     int _WaitForKey(int msec = 0);

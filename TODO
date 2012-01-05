@@ -14,6 +14,4 @@
 * Build a reusable codec (for instance a gstreamer plugin) based on the same
   code to watch ASF in the system player.
 
-* Put License notice to the file header
-
 * Fix bug with closing window

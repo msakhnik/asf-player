@@ -132,15 +132,11 @@ void cAsfPlayer::_FillImgData()
 
 void cAsfPlayer::_SetPlayerOptions(unsigned int &frame, unsigned int & end)
 {
-    //put trackbar in top
-    if (_track)
-        cvCreateTrackbar2("Frame:", "frame", reinterpret_cast<int*>
-                          (&frame), static_cast<int> (end), TrackbarCallback, this);
     if (_scale)
     {
-        _dst = cvCreateImage(cvSize(_img->width*_scale,
-                                    _img->height * _scale),
-                             _img->depth, _img->nChannels);
+        _dst = cvCreateImage (cvSize (_img->width*_scale,
+                                               _img->height*_scale),
+                                       _img->depth, _img->nChannels);
         cvResize(_img, _dst, 1);
     }
 }
@@ -161,13 +157,11 @@ int cAsfPlayer::_ProcessKey(int key, unsigned int & frame, bool & pause)
         if (!pause)
             pause = true;
         frame -= 2;
-        TrackbarCallback(frame, this);
         exit_flag = 2; //do next
         break;
     case '.':
         if (!pause)
             pause = true;
-        TrackbarCallback(frame, this);
         exit_flag = 2; //do next
         break;
     case ' ':
@@ -182,80 +176,71 @@ int cAsfPlayer::_ProcessKey(int key, unsigned int & frame, bool & pause)
     return exit_flag;
 }
 
-void cAsfPlayer::_CheckFrame()
+void cAsfPlayer::_SetFirstTime(timeval& frame_deadline, timeval& frame_duration)
 {
-    if (!_file.ReadFrame())
-        cerr << "\nSome data is lost" << endl;
+    gettimeofday(&frame_deadline, NULL); // Show the first frame right now
+    timeradd(&frame_deadline, &frame_duration, &frame_deadline);
+}
+
+int cAsfPlayer::_GetWaitTime(timeval& frame_deadline)
+{
+    struct timeval now;
+    gettimeofday(&now, NULL);
+    int wait_time = 1; //minimum delay
+    if (timercmp(&now, &frame_deadline, <))
+    {
+        struct timeval new_time;
+        new_time.tv_sec = 0;
+        new_time.tv_usec = 0;
+        timersub(&frame_deadline, &now, &new_time);
+        wait_time = new_time.tv_sec * 1000 +
+            new_time.tv_usec / 1000;
+    }
+    else
+        cerr << "\nSlow playing..." << endl;
+
+    return wait_time;
+}
+
+bool cAsfPlayer::_ControlKey(unsigned int & frame, timeval & frame_deadline)
+{
+    int key = 0;
+    static bool pause = false;
+    if (pause || _frame_by_frame)
+        while (!(key = _ProcessKey(cvWaitKey(0), frame, pause)))
+        {
+        }
+    else
+        key = _ProcessKey(cvWaitKey(_GetWaitTime(frame_deadline)),
+                                                        frame, pause);
+    if (key == 1)
+        return true;
+
+    return false;
 }
 
 bool cAsfPlayer::_ShowFrame()
 {
-    unsigned int frame = this->_file.GetStartFrame()
-                        , end_frame = this->_file.GetEndFrame()
-                        , check_position = this->_file.GetStartFrame() - 1;
-                        ;
-    bool pause = false; //for play/pause
+    unsigned int end_frame = this->_file.GetEndFrame();
+    struct timeval frame_deadline, frame_duration;
     int delay = _file.GetMsecPerFrame() * 1000;
+    frame_duration.tv_sec = 0; frame_duration.tv_usec = delay;
 
-    struct timeval frame_duration;
-    frame_duration.tv_sec = 0;
-    frame_duration.tv_usec = delay;
-
-    _CheckFrame();
-
-    while (frame <= end_frame)
+    _file.ReadFrame();
+    for (unsigned frame = this->_file.GetStartFrame();
+                        frame <= end_frame; ++frame)
     {
-        struct timeval frame_deadline;
-        gettimeofday(&frame_deadline, NULL); // Show the first frame right now
-
-        timeradd(&frame_deadline, &frame_duration, &frame_deadline);
-
-        if (frame - check_position != 1)
-        {
-            _CheckFrame();
-            check_position = frame;
-        }
-
+        cout << "\rFrame: " << frame << flush;
+        _SetFirstTime(frame_deadline, frame_duration);
         _FillImgData();
         _SetPlayerOptions(frame, end_frame);
-
         cvShowImage("frame", _full_screen ? _img : _dst);
-
         if (frame != end_frame)
-            _CheckFrame();
+            _file.ReadFrame();
 
-        struct timeval now;
-        gettimeofday(&now, NULL);
-
-        int wait_time = 1; //minimum delay
-
-        if (timercmp(&now, &frame_deadline, <))
-        {
-            struct timeval new_time;
-
-            timersub(&frame_deadline, &now, &new_time);
-            wait_time = frame_duration.tv_sec * 1000 +
-                                frame_duration.tv_usec / 1000;
-        }
-        else
-            cerr << "\nSlow playing..." << endl;
-
-        int key = 0;
-
-        if (pause || _frame_by_frame)
-            while(!(key = _ProcessKey(cvWaitKey(0), frame, pause)))
-            {
-            }
-        else
-            key = _ProcessKey(cvWaitKey(wait_time), frame, pause);
-
-        if (key == 1)
-            return true;
-
-        ++check_position;
-        ++frame;
+        if (_ControlKey(frame, frame_deadline))
+            break;
     }
-
 return true;
 }
 
