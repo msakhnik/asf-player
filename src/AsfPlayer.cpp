@@ -46,50 +46,32 @@ cAsfPlayer::~cAsfPlayer()
 
 bool cAsfPlayer::Init()
 {
-    if (!_file.ReadHeader())
+    if (!_file.ReadHeader() || !_file.SetPositionFrame())
     {
         cerr << "Error reading from file" << endl;
         return false;
     }
-
-    if (!_file.SetPositionFrame())
-    {
-        cerr << "Error reading from file" << endl;
-        return false;
-    }
-
-    int w = _file.GetCols();
-    int h = _file.GetRows();
-
-    //check the width and height
-    if (!w || !h)
+    if (!_file.GetCols() || !_file.GetRows())
     {
         cerr << "Can't reproduce one-dimensional film" << endl;
         return false;
     }
-
     _img = cvCreateImage(cvSize(_file.GetCols(), _file.GetRows()),
                          IPL_DEPTH_8U, 1);
-
-    IplImage* _dst = cvCreateImage(cvSize(_img->width*_scale,
+     _dst = cvCreateImage(cvSize(_img->width*_scale,
                                          _img->height * _scale),
                                   _img->depth, _img->nChannels);
-
     if (!_img || !_dst)
     {
         cerr << "Cannot create a window " << endl;
         return false;
     }
-
     _data = reinterpret_cast<uchar *>(_img->imageData);
-
     cvNamedWindow("frame", _full_screen ? 0 : 1);
-
     // Check if it's the full screen mode
     if (this->_full_screen)
         cvSetWindowProperty("frame", CV_WND_PROP_FULLSCREEN,
                             CV_WINDOW_FULLSCREEN);
-
     return true;
 }
 
@@ -105,16 +87,6 @@ bool cAsfPlayer::Play()
     return false;
 }
 
-static void TrackbarCallback(int pos, void* obj)
-{
-    static cAsfPlayer* playerObj = (cAsfPlayer*) obj;
-    if (pos >= static_cast<int>(playerObj->GetFile().GetStartFrame())
-            && pos <= static_cast<int>(playerObj->GetFile().GetEndFrame()))
-    {
-        playerObj->GetFile().ChangePosition(pos);
-    }
-}
-
 void cAsfPlayer::_FillImgData()
 {
     cAsfFile::FrameT const& image_data = _file.GetLastFrame();
@@ -125,7 +97,7 @@ void cAsfPlayer::_FillImgData()
         for (int j = 0; j < _img->width; ++j)
         {
             _data[i * _img->widthStep + j * _img->nChannels]
-                = *(iter++);
+                = *(++iter);
         }
     }
 }
@@ -143,7 +115,7 @@ void cAsfPlayer::_SetPlayerOptions(unsigned int &frame, unsigned int & end)
 
 int cAsfPlayer::_ProcessKey(int key, unsigned int & frame, bool & pause)
 {
-    int exit_flag = 0;
+    int exit_flag = 2;
     switch (key)
     {
     case -1: // Timeout
@@ -157,22 +129,21 @@ int cAsfPlayer::_ProcessKey(int key, unsigned int & frame, bool & pause)
         if (!pause)
             pause = true;
         frame -= 2;
-        exit_flag = 2; //do next
+        _file.ChangePosition(frame);
         break;
     case '.':
         if (!pause)
             pause = true;
-        exit_flag = 2; //do next
+        ++frame;
+        _file.ChangePosition(frame);
         break;
     case ' ':
         pause = !pause;
-        exit_flag = 2;
         break;
     default:
         exit_flag = 0;
         break;
     }
-
     return exit_flag;
 }
 
@@ -198,7 +169,6 @@ int cAsfPlayer::_GetWaitTime(timeval& frame_deadline)
     }
     else
         cerr << "\nSlow playing..." << endl;
-
     return wait_time;
 }
 
@@ -223,20 +193,20 @@ bool cAsfPlayer::_ShowFrame()
 {
     unsigned int end_frame = this->_file.GetEndFrame();
     struct timeval frame_deadline, frame_duration;
+
     int delay = _file.GetMsecPerFrame() * 1000;
     frame_duration.tv_sec = 0; frame_duration.tv_usec = delay;
-
-    _file.ReadFrame();
+    
     for (unsigned frame = this->_file.GetStartFrame();
                         frame <= end_frame; ++frame)
     {
         cout << "\rFrame: " << frame << flush;
         _SetFirstTime(frame_deadline, frame_duration);
+        _file.ReadFrame();
         _FillImgData();
         _SetPlayerOptions(frame, end_frame);
+
         cvShowImage("frame", _full_screen ? _img : _dst);
-        if (frame != end_frame)
-            _file.ReadFrame();
 
         if (_ControlKey(frame, frame_deadline))
             break;

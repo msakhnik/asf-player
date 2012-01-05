@@ -111,25 +111,18 @@ bool cAsfFile::SetPositionFrame()
 {
     this->_frame_position.resize(this->_end_frame);
     fill (this->_frame_position.begin(), this->_frame_position.end(), 0);
-
     string line;
-
     if (!_file.is_open())
         return false;
-
     while (_file.good())
     {
         getline(_file, line);
-
         unsigned int row = 0;
         if (line.substr(0, 5) == "Frame")
         {
-            //parse string and get number of current frame
-            //set in array current position
             int skip = _file.tellg();
             row = GetNumberFrame(line);
             _frame_position[row] = skip - line.length() - 1;
-
             if (row == _end_frame - 1)
             {
                 _file.seekg(_frame_position[1]);
@@ -138,7 +131,6 @@ bool cAsfFile::SetPositionFrame()
             }
         }
     }
-
     return true;
 }
 //This func call from trackbar and control key
@@ -151,13 +143,10 @@ void cAsfFile::ChangePosition(unsigned int pos)
 void cAsfFile::ReadFrame()
 {
     _last_frame.clear();
-
     string line;
-
     while (_file.good())
     {
         getline(_file, line);
-
         if (line.length() <= 3 || line.substr(0, 5) == "Frame")
         {
             if (!_last_frame.empty())
@@ -168,7 +157,6 @@ void cAsfFile::ReadFrame()
             //Зчитую рядок
             istringstream is(line);
             string s;
-
             while (getline(is, s, ','))
                 _last_frame.push_back(atoi(s.c_str()));
         }
