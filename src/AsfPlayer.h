@@ -40,25 +40,28 @@ public:
     void SetFullScreen(bool flag) { _full_screen = flag; }
     void SetFrameByFrame(bool flag) { _frame_by_frame = flag; }
     void SetScale(unsigned int value) { _scale = value; }
-    void SetTrack(bool flag) { _track = flag; }
+    void SetRecord(bool flag) { _record = flag; }
 
     bool GetFullScreen() const { return _full_screen; }
     bool GetFrameByFrame() const { return _frame_by_frame; }
     cAsfFile& GetFile() const { return this->_file; };
 
     bool Init();
+    bool RecordVideo();
 
 private:
     cAsfFile &_file;
     bool _full_screen;
     bool _frame_by_frame;
-    bool _track;
+    bool _record;
     unsigned int _scale;
 
     IplImage* _img;
     IplImage* _dst;
+    CvCapture* _capture;
     uchar* _data;
 
+    bool _InitRecord();
     bool _ShowFrame();
     void _FillImgData();
     void _SetPlayerOptions(unsigned int &, unsigned int &);
@@ -66,6 +69,7 @@ private:
     bool _ControlKey(unsigned int &, timeval &);
     void _SetFirstTime(timeval &, timeval &);
     int _GetWaitTime(timeval &);
+    void _GetWebCamData(std::vector<int> &);
 
     // Wait for user input atmost @msec milliseconds
     int _WaitForKey(int msec = 0);

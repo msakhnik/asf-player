@@ -1,8 +1,3 @@
-* Change frame instantly when the trackbar is moved
-
-* Let the trackbar show time mm:ss instead of frame number or at least two
-  these values
-
 * Develop automatic tests
 
 * Add method for writing asf-files

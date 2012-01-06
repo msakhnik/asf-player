@@ -40,6 +40,13 @@ public:
     FrameT const& GetLastFrame() const { return _last_frame; }
     bool SetPositionFrame();
     void ChangePosition(unsigned int);
+    void SetCols(int value) { _cols = value; }
+    void SetRows(int value) { _rows = value; }
+    void SetEndFrame(int value) { _end_frame = value; }
+    void SetSecondsPerFrame(bool flag) { _seconds_per_frame = flag; }
+    void RecordFrame(std::vector<int> &, unsigned int &);
+    bool RecordHeader();
+    bool InitRecordFile();
 
     std::string const& GetDataType() const { return _data_type; }
     std::string const& GetVersion() const { return _version; }
@@ -54,6 +61,8 @@ public:
 
 private:
     std::ifstream _file;
+    std::ofstream _fileRecord;
+    const char * _filename;
 
     typedef std::map<std::string, std::string>
         _KeyValT;

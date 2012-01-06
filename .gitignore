@@ -17,3 +17,4 @@ missing
 .dep.inc
 example/test1.asf
 src/player
+src/*.asf

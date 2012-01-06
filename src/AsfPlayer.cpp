@@ -32,7 +32,7 @@ cAsfPlayer::cAsfPlayer(cAsfFile &file)
     : _file(file)
     , _full_screen(false)
     , _frame_by_frame(false)
-    , _track(false)
+    , _record(false)
     , _scale(1)
 {
 }
@@ -41,6 +41,7 @@ cAsfPlayer::~cAsfPlayer()
 {
     cvReleaseImage(&_img);
     cvReleaseImage(&_dst);
+//    cvReleaseCapture(&_capture);
     cvDestroyWindow("image");
 }
 
@@ -212,6 +213,71 @@ bool cAsfPlayer::_ShowFrame()
             break;
     }
 return true;
+}
+
+bool cAsfPlayer::_InitRecord()
+{
+    if (!_file.InitRecordFile())
+        return false;
+    _capture = cvCreateCameraCapture(CV_CAP_ANY);
+    assert(_capture);
+
+    if (!_capture)
+    {
+        cout << "Webcam not found!" << endl;
+        return false;
+    }
+    cvSetCaptureProperty(_capture, CV_CAP_PROP_FRAME_WIDTH, 320); //1280);
+    cvSetCaptureProperty(_capture, CV_CAP_PROP_FRAME_HEIGHT, 240); //960);
+
+    _file.SetCols(cvGetCaptureProperty(_capture, CV_CAP_PROP_FRAME_WIDTH));
+    _file.SetRows(cvGetCaptureProperty(_capture, CV_CAP_PROP_FRAME_HEIGHT));
+
+    cvNamedWindow("image", CV_WINDOW_AUTOSIZE);
+
+    return true;
+}
+
+void cAsfPlayer::_GetWebCamData(vector<int> & data_image)
+{
+    static int width = _file.GetCols();
+    static int height = _file.GetRows();
+    _img = cvQueryFrame(_capture);
+    _dst = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 1);
+        //Переводжу в відтінки сірого
+        cvCvtColor(_img, _dst, CV_RGB2GRAY);
+
+    for (int i = 0; i < _dst->height; i++)
+        for (int j = 0; j < _dst->width; j++)
+            data_image.push_back(cvGetReal2D(_dst, i, j));
+}
+
+bool cAsfPlayer::RecordVideo()
+{
+    if (!_InitRecord())
+        return false;
+    vector<int> data_image;
+    unsigned int number_frame = 1;
+    while (true)
+    {
+        data_image.clear();
+        _GetWebCamData(data_image);
+        _file.RecordFrame(data_image, number_frame);
+
+        cvShowImage("image", _dst);
+
+        char c = cvWaitKey(33);
+        if (c == 'q')
+        {
+            break;
+        }
+        ++number_frame;
+    }
+    _file.SetEndFrame(number_frame);
+    if (!_file.RecordHeader())
+        return false;
+
+    return true;
 }
 
 // vim: set et ts=4 sw=4:

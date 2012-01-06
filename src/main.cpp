@@ -42,7 +42,7 @@ static void _ReadHelp(const char *progname)
             "  -f,--full-screen\tPlay on full screen\n"
             "  -b,--frame-by-frame\tShow frame by frame\n"
             "  -s,--scale\t\tSet scale\n"
-            "  -t,--track\t\tSet trackbar\n"
+            "  -r,--record\t\tRecord video from webcam\n"
             "  -h,--help\t\tThis help message\n\n"
             "Example:\n"
             "  " << progname << " example/example1.asf\n"
@@ -59,8 +59,8 @@ int main(int argc, char** argv)
     bool full_screen = false;
     bool frame_by_frame = false;
     unsigned int scale = 1;
-    bool track = false;
-
+    bool record = false;
+    string filename;
     while (true)
     {
         static struct option long_options[] =
@@ -68,7 +68,7 @@ int main(int argc, char** argv)
             { "frame-by-frame", no_argument,    0, 'b' },
             { "full-screen",    no_argument,        0, 'f' },
             { "scale",          required_argument, 0, 's' },
-            { "track",          no_argument,          0, 't' },
+            { "record",        required_argument,          0, 'r' },
             { "help",           no_argument,           0, 'h' },
             { 0, 0, 0, 0 }
         };
@@ -76,9 +76,8 @@ int main(int argc, char** argv)
         int c = 0;
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "bfs:th",
+        c = getopt_long(argc, argv, "bfr:s:th",
                         long_options, &option_index);
-
         if (c == -1)
             break;
 
@@ -88,8 +87,9 @@ int main(int argc, char** argv)
             _ReadHelp(progname);
             return 0;
 
-        case 't':
-            track = true;
+        case 'r':
+            record = true;
+            filename = optarg;
             break;
 
         case 's':
@@ -115,14 +115,13 @@ int main(int argc, char** argv)
         }
     }
 
-    if (argc != optind + 1)
+    if (argc != optind + 1 && !record)
     {
         cerr << "File name is missing (try --help)" << endl;
         return 1;
     }
-
-    string filename = argv[optind];
-    cout << filename << endl;
+    if (filename.length() == 0)
+        filename = argv[optind];
 
     if (filename.length() < 4 ||
         filename.substr(filename.length() - 4, 4) != ".asf")
@@ -134,6 +133,11 @@ int main(int argc, char** argv)
     cAsfFile file(filename);
 
     cAsfPlayer player(file);
+    if (record)
+    {
+        player.RecordVideo();
+        return 0;
+    }
 
     if (full_screen)
         player.SetFullScreen(true);
@@ -145,9 +149,6 @@ int main(int argc, char** argv)
 
     if (frame_by_frame)
         player.SetFrameByFrame(true);
-
-    if (track)
-        player.SetTrack(true);
 
     if (!player.Init())
         return 1;

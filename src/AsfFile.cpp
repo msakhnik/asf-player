@@ -34,12 +34,22 @@
 #include <cv.h>
 #include <highgui.h>
 #include <cxcore.h>
+#include <ncurses.h>
 
 using namespace std;
 
 cAsfFile::cAsfFile(const string& file)
-        : _file(file.c_str())
+        : _filename(file.c_str())
 {
+    _data_type = "MOVIE";
+    _version = "webcam 1.0";
+    _seconds_per_frame = 0.33;
+    _rows = 1;
+    _cols = 1;
+    _noise_threshold = 0;
+    _start_frame = 1;
+    _end_frame = 1;
+    _ascii_data = "@@";
     //initial header array
     _info["HARDWARE"] = "0";
     _info["HW_TYPE"] = "MOVIE";
@@ -57,6 +67,7 @@ cAsfFile::cAsfFile(const string& file)
 
 bool cAsfFile::ReadHeader()
 {
+    _file.open(_filename);
     if (!_file.is_open())
         return false;
 
@@ -164,6 +175,59 @@ void cAsfFile::ReadFrame()
 
     if (_last_frame.empty())
         cerr << "\nSome data is lost" << endl;;
+}
+
+bool cAsfFile::InitRecordFile()
+{
+    _fileRecord.open("tmp.dat");
+    if (!_fileRecord.is_open())
+    {
+        cerr << "Cannot create file" << endl;
+        return false;
+    }
+    return true;
+}
+
+void cAsfFile::RecordFrame(vector<int> & data, unsigned int & frame)
+{
+    _fileRecord << "\nFrame " << frame << "\n";
+    vector<int>::const_iterator iter = data.begin();
+    for (unsigned int i = 0; i < _cols; ++i)
+    {
+        for (unsigned int j = 0; j < _rows; ++j)
+        {
+            _fileRecord << *(++iter);
+            if (j != _rows - 1)
+                _fileRecord << ",";
+        }
+        _fileRecord << "\n";
+    }
+}
+bool cAsfFile::RecordHeader()
+{
+    ofstream final_file;
+    final_file.open(_filename);
+    final_file << "DATA_TYPE " << _data_type << "\n";
+    final_file << "VERSION " << _version << "\n";
+    final_file << "SECONDS_PER_FRAME " << _seconds_per_frame << "\n";
+    final_file << "ROWS " << _rows << "\n";
+    final_file << "COLS " << _cols << "\n";
+    final_file << "NOISE_THRESHOLD " << _noise_threshold << "\n";
+    final_file << "START_FRAME " << _start_frame << "\n";
+    final_file << "END_FRAME " << _end_frame << "\n";
+    final_file << "ASCII_DATA " << _ascii_data << "\n";
+    _fileRecord.close();
+    ifstream ss;
+    char p;
+    ss.open("tmp.dat", ios::binary); //отсюда читаем
+    ss.seekg(0);
+    while (ss)
+    {
+        ss.read(&p, sizeof (char));
+        final_file.write(&p, sizeof (char));
+    }
+    remove("tmp.dat");
+    return true;
 }
 
 // vim: set et ts=4 sw=4:
