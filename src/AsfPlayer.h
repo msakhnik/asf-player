@@ -55,6 +55,9 @@ private:
     bool _frame_by_frame;
     bool _record;
     unsigned int _scale;
+    unsigned int _frame;
+    bool _pause;
+    struct timeval _frame_deadline;
 
     IplImage* _img;
     IplImage* _dst;
@@ -62,13 +65,13 @@ private:
     uchar* _data;
 
     bool _InitRecord();
-    bool _ShowFrame();
+    void _ShowFrame();
     void _FillImgData();
-    void _SetPlayerOptions(unsigned int &, unsigned int &);
-    int _ProcessKey(int, unsigned int &, bool &);
-    bool _ControlKey(unsigned int &, timeval &);
-    void _SetFirstTime(timeval &, timeval &);
-    int _GetWaitTime(timeval &);
+    void _SetPlayerOptions();
+    int _ProcessKey(int);
+    bool _ControlKey();
+    void _SetFirstTime(timeval &);
+    int _GetWaitTime();
     void _GetWebCamData(std::vector<int> &);
 
     // Wait for user input atmost @msec milliseconds

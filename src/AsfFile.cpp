@@ -83,7 +83,7 @@ bool cAsfFile::ReadHeader()
         string key, value;
         tmp >> key;
         value = line.substr(key.length() + 1,
-                            line.length() - key.length());
+                                      line.length() - key.length());
         if (key == "DATA_TYPE")
             _data_type = value;
         else if (key == "VERSION")

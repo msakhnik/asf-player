@@ -34,6 +34,7 @@ cAsfPlayer::cAsfPlayer(cAsfFile &file)
     , _frame_by_frame(false)
     , _record(false)
     , _scale(1)
+    , _pause(false)
 {
 }
 
@@ -41,7 +42,7 @@ cAsfPlayer::~cAsfPlayer()
 {
     cvReleaseImage(&_img);
     cvReleaseImage(&_dst);
-//    cvReleaseCapture(&_capture);
+
     cvDestroyWindow("image");
 }
 
@@ -58,10 +59,10 @@ bool cAsfPlayer::Init()
         return false;
     }
     _img = cvCreateImage(cvSize(_file.GetCols(), _file.GetRows()),
-                         IPL_DEPTH_8U, 1);
+                                        IPL_DEPTH_8U, 1);
      _dst = cvCreateImage(cvSize(_img->width*_scale,
                                          _img->height * _scale),
-                                  _img->depth, _img->nChannels);
+                                         _img->depth, _img->nChannels);
     if (!_img || !_dst)
     {
         cerr << "Cannot create a window " << endl;
@@ -78,14 +79,25 @@ bool cAsfPlayer::Init()
 
 bool cAsfPlayer::Play()
 {
-    if (_ShowFrame())
-    {
-        cout << endl;
-        return true;
-    }
+    unsigned int end_frame = _file.GetEndFrame();
+    struct timeval frame_duration;
 
-    cerr << "Error reading frames" << endl;
-    return false;
+    int delay = _file.GetMsecPerFrame() * 1000;
+    frame_duration.tv_sec = 0;
+    frame_duration.tv_usec = delay;
+
+    for (_frame = _file.GetStartFrame();
+           _frame <= end_frame; ++_frame)
+    {
+        cout << "\rFrame: " << _frame << flush;
+        _SetFirstTime(frame_duration);
+        _ShowFrame();
+
+        if (_ControlKey())
+            break;
+    }
+    cerr << endl;
+    return true;
 }
 
 void cAsfPlayer::_FillImgData()
@@ -94,27 +106,25 @@ void cAsfPlayer::_FillImgData()
     vector<int>::const_iterator iter = image_data.begin();
 
     for (int i = 0; i < _img->height; ++i)
-    {
         for (int j = 0; j < _img->width; ++j)
         {
             _data[i * _img->widthStep + j * _img->nChannels]
                 = *(++iter);
         }
-    }
 }
 
-void cAsfPlayer::_SetPlayerOptions(unsigned int &frame, unsigned int & end)
+void cAsfPlayer::_SetPlayerOptions()
 {
     if (_scale)
     {
-        _dst = cvCreateImage (cvSize (_img->width*_scale,
-                                               _img->height*_scale),
-                                       _img->depth, _img->nChannels);
+        _dst = cvCreateImage(cvSize (_img->width*_scale,
+                                           _img->height*_scale),
+                                           _img->depth, _img->nChannels);
         cvResize(_img, _dst, 1);
     }
 }
 
-int cAsfPlayer::_ProcessKey(int key, unsigned int & frame, bool & pause)
+int cAsfPlayer::_ProcessKey(int key)
 {
     int exit_flag = 2;
     switch (key)
@@ -127,19 +137,19 @@ int cAsfPlayer::_ProcessKey(int key, unsigned int & frame, bool & pause)
         exit_flag = 1;//good exit
         break;
     case ',':
-        if (!pause)
-            pause = true;
-        frame -= 2;
-        _file.ChangePosition(frame);
+        if (!_pause)
+            _pause = true;
+        _frame -= 2;
+        _file.ChangePosition(_frame);
         break;
     case '.':
-        if (!pause)
-            pause = true;
-        ++frame;
-        _file.ChangePosition(frame);
+        if (!_pause)
+            _pause = true;
+        ++_frame;
+        _file.ChangePosition(_frame);
         break;
     case ' ':
-        pause = !pause;
+        _pause = !_pause;
         break;
     default:
         exit_flag = 0;
@@ -148,23 +158,23 @@ int cAsfPlayer::_ProcessKey(int key, unsigned int & frame, bool & pause)
     return exit_flag;
 }
 
-void cAsfPlayer::_SetFirstTime(timeval& frame_deadline, timeval& frame_duration)
+void cAsfPlayer::_SetFirstTime(timeval& frame_duration)
 {
-    gettimeofday(&frame_deadline, NULL); // Show the first frame right now
-    timeradd(&frame_deadline, &frame_duration, &frame_deadline);
+    gettimeofday(&_frame_deadline, NULL); // Show the first frame right now
+    timeradd(&_frame_deadline, &frame_duration, &_frame_deadline);
 }
 
-int cAsfPlayer::_GetWaitTime(timeval& frame_deadline)
+int cAsfPlayer::_GetWaitTime()
 {
     struct timeval now;
     gettimeofday(&now, NULL);
     int wait_time = 1; //minimum delay
-    if (timercmp(&now, &frame_deadline, <))
+    if (timercmp(&now, &_frame_deadline, <))
     {
         struct timeval new_time;
         new_time.tv_sec = 0;
         new_time.tv_usec = 0;
-        timersub(&frame_deadline, &now, &new_time);
+        timersub(&_frame_deadline, &now, &new_time);
         wait_time = new_time.tv_sec * 1000 +
             new_time.tv_usec / 1000;
     }
@@ -173,53 +183,35 @@ int cAsfPlayer::_GetWaitTime(timeval& frame_deadline)
     return wait_time;
 }
 
-bool cAsfPlayer::_ControlKey(unsigned int & frame, timeval & frame_deadline)
+bool cAsfPlayer::_ControlKey()
 {
     int key = 0;
-    static bool pause = false;
-    if (pause || _frame_by_frame)
-        while (!(key = _ProcessKey(cvWaitKey(0), frame, pause)))
+    if (_pause || _frame_by_frame)
+        while (!(key = _ProcessKey(cvWaitKey(0))))
         {
         }
     else
-        key = _ProcessKey(cvWaitKey(_GetWaitTime(frame_deadline)),
-                                                        frame, pause);
+        key = _ProcessKey(cvWaitKey(_GetWaitTime()));
     if (key == 1)
         return true;
 
     return false;
 }
 
-bool cAsfPlayer::_ShowFrame()
+void cAsfPlayer::_ShowFrame()
 {
-    unsigned int end_frame = _file.GetEndFrame();
-    struct timeval frame_deadline, frame_duration;
+    _file.ReadFrame();
+    _FillImgData();
+    _SetPlayerOptions();
 
-    int delay = _file.GetMsecPerFrame() * 1000;
-    frame_duration.tv_sec = 0; frame_duration.tv_usec = delay;
-    
-    for (unsigned frame = _file.GetStartFrame();
-                        frame <= end_frame; ++frame)
-    {
-        cout << "\rFrame: " << frame << flush;
-        _SetFirstTime(frame_deadline, frame_duration);
-        _file.ReadFrame();
-        _FillImgData();
-        _SetPlayerOptions(frame, end_frame);
-
-        cvShowImage("frame", _full_screen ? _img : _dst);
-
-        if (_ControlKey(frame, frame_deadline))
-            break;
-    }
-return true;
+    cvShowImage("frame", _full_screen ? _img : _dst);
 }
 
 bool cAsfPlayer::_InitRecord()
 {
     if (!_file.InitRecordFile())
         return false;
-    _capture = cvCreateCameraCapture(CV_CAP_ANY);
+    _capture = cvCreateCameraCapture(-1);
     assert(_capture);
 
     if (!_capture)
@@ -255,28 +247,32 @@ void cAsfPlayer::_GetWebCamData(vector<int> & data_image)
 bool cAsfPlayer::RecordVideo()
 {
     if (!_InitRecord())
+    {
+        cvReleaseCapture(&_capture);
         return false;
+    }
     vector<int> data_image;
-    unsigned int number_frame = 1;
+    _frame = 1;
     while (true)
     {
         data_image.clear();
         _GetWebCamData(data_image);
-        _file.RecordFrame(data_image, number_frame);
+        _file.RecordFrame(data_image, _frame);
 
         cvShowImage("image", _dst);
 
         char c = cvWaitKey(33);
         if (c == 'q')
         {
+            cvReleaseCapture(&_capture);
             break;
         }
-        ++number_frame;
+        ++_frame;
     }
-    _file.SetEndFrame(number_frame);
+    _file.SetEndFrame(_frame);
     if (!_file.RecordHeader())
         return false;
-
+    cerr << endl;
     return true;
 }
 
