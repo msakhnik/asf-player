@@ -44,7 +44,7 @@ public:
 
     bool GetFullScreen() const { return _full_screen; }
     bool GetFrameByFrame() const { return _frame_by_frame; }
-    cAsfFile& GetFile() const { return this->_file; };
+    cAsfFile& GetFile() const { return _file; };
 
     bool Init();
     bool RecordVideo();

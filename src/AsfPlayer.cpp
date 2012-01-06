@@ -70,7 +70,7 @@ bool cAsfPlayer::Init()
     _data = reinterpret_cast<uchar *>(_img->imageData);
     cvNamedWindow("frame", _full_screen ? 0 : 1);
     // Check if it's the full screen mode
-    if (this->_full_screen)
+    if (_full_screen)
         cvSetWindowProperty("frame", CV_WND_PROP_FULLSCREEN,
                             CV_WINDOW_FULLSCREEN);
     return true;
@@ -78,7 +78,7 @@ bool cAsfPlayer::Init()
 
 bool cAsfPlayer::Play()
 {
-    if (this->_ShowFrame())
+    if (_ShowFrame())
     {
         cout << endl;
         return true;
@@ -192,13 +192,13 @@ bool cAsfPlayer::_ControlKey(unsigned int & frame, timeval & frame_deadline)
 
 bool cAsfPlayer::_ShowFrame()
 {
-    unsigned int end_frame = this->_file.GetEndFrame();
+    unsigned int end_frame = _file.GetEndFrame();
     struct timeval frame_deadline, frame_duration;
 
     int delay = _file.GetMsecPerFrame() * 1000;
     frame_duration.tv_sec = 0; frame_duration.tv_usec = delay;
     
-    for (unsigned frame = this->_file.GetStartFrame();
+    for (unsigned frame = _file.GetStartFrame();
                         frame <= end_frame; ++frame)
     {
         cout << "\rFrame: " << frame << flush;

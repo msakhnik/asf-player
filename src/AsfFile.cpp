@@ -85,23 +85,23 @@ bool cAsfFile::ReadHeader()
         value = line.substr(key.length() + 1,
                             line.length() - key.length());
         if (key == "DATA_TYPE")
-            this->_data_type = value;
+            _data_type = value;
         else if (key == "VERSION")
-            this->_version = value;
+            _version = value;
         else if (key == "NOISE_THRESHOLD")
-            this->_noise_threshold = atoi(value.c_str());
+            _noise_threshold = atoi(value.c_str());
         else if (key == "COLS")
-            this->_cols = atoi(value.c_str());
+            _cols = atoi(value.c_str());
         else if (key == "ROWS")
-            this->_rows = atoi(value.c_str());
+            _rows = atoi(value.c_str());
         else if (key == "START_FRAME")
-            this->_start_frame = atoi(value.c_str());
+            _start_frame = atoi(value.c_str());
         else if (key == "END_FRAME")
-            this->_end_frame = atoi(value.c_str());
+            _end_frame = atoi(value.c_str());
         else if (key == "SECONDS_PER_FRAME")
-            this->_seconds_per_frame = 1000 * atof(value.c_str());
+            _seconds_per_frame = 1000 * atof(value.c_str());
         else if (key == "ASCII_DATA")
-            this->_ascii_data = value;
+            _ascii_data = value;
         else
             _info[key] = value;
     }
@@ -120,8 +120,8 @@ static unsigned int GetNumberFrame(string & str)
 //Store position all frames
 bool cAsfFile::SetPositionFrame()
 {
-    this->_frame_position.resize(this->_end_frame);
-    fill (this->_frame_position.begin(), this->_frame_position.end(), 0);
+    _frame_position.resize(_end_frame);
+    fill (_frame_position.begin(), _frame_position.end(), 0);
     string line;
     if (!_file.is_open())
         return false;
@@ -147,8 +147,8 @@ bool cAsfFile::SetPositionFrame()
 //This func call from trackbar and control key
 void cAsfFile::ChangePosition(unsigned int pos)
 {
-    if (this->_frame_position[pos])
-        this->_file.seekg(this->_frame_position[pos]);
+    if (_frame_position[pos])
+        _file.seekg(_frame_position[pos]);
 }
 
 void cAsfFile::ReadFrame()
