@@ -38,12 +38,9 @@ public:
     bool Play();
 
     void SetFullScreen(bool flag) { _full_screen = flag; }
-    void SetFrameByFrame(bool flag) { _frame_by_frame = flag; }
     void SetScale(unsigned int value) { _scale = value; }
     void SetRecord(bool flag) { _record = flag; }
-
     bool GetFullScreen() const { return _full_screen; }
-    bool GetFrameByFrame() const { return _frame_by_frame; }
     cAsfFile& GetFile() const { return _file; };
 
     bool Init();
@@ -52,11 +49,11 @@ public:
 private:
     cAsfFile &_file;
     bool _full_screen;
-    bool _frame_by_frame;
     bool _record;
     unsigned int _scale;
     unsigned int _frame;
     bool _pause;
+    bool _exit_flag;
     struct timeval _frame_deadline;
 
     IplImage* _img;

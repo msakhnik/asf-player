@@ -31,11 +31,11 @@ using namespace std;
 cAsfPlayer::cAsfPlayer(cAsfFile &file)
     : _file(file)
     , _full_screen(false)
-    , _frame_by_frame(false)
     , _record(false)
     , _scale(1)
     , _frame(0)
     , _pause(false)
+    ,  _exit_flag(false)
 {
 }
 
@@ -165,8 +165,10 @@ bool cAsfPlayer::_ControlKey()
     //        I believe instead of two variables _frame_by_frame and
     //        _pause, there may be used one of them. "Frame by frame" means
     //        pause + show next frame.
+    //
+    // yes, now this variable is not need
     int key = 0;
-    if (_pause || _frame_by_frame)
+    if (_pause)
         while (!(key = _ProcessKey(cvWaitKey(0))))
         {
         }

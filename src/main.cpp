@@ -57,7 +57,6 @@ int main(int argc, char** argv)
     char const* progname = _Basename(argv[0]);
 
     bool full_screen = false;
-    bool frame_by_frame = false;
     unsigned int scale = 1;
     bool record = false;
     string filename;
@@ -65,8 +64,6 @@ int main(int argc, char** argv)
     {
         static struct option long_options[] =
         {
-            { "frame-by-frame", no_argument,    0, 'b' },
-            { "full-screen",    no_argument,        0, 'f' },
             { "scale",          required_argument, 0, 's' },
             { "record",        required_argument,          0, 'r' },
             { "help",           no_argument,           0, 'h' },
@@ -76,7 +73,7 @@ int main(int argc, char** argv)
         int c = 0;
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "bfr:s:th",
+        c = getopt_long(argc, argv, "fr:s:th",
                         long_options, &option_index);
         if (c == -1)
             break;
@@ -103,10 +100,6 @@ int main(int argc, char** argv)
 
         case 'f':
             full_screen = true;
-            break;
-
-        case 'b':
-            frame_by_frame = true;
             break;
 
         default:
@@ -147,8 +140,6 @@ int main(int argc, char** argv)
             player.SetScale(scale);
     }
 
-    if (frame_by_frame)
-        player.SetFrameByFrame(true);
 
     if (!player.Init())
         return 1;
