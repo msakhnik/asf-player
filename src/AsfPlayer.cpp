@@ -91,7 +91,11 @@ bool cAsfPlayer::Play()
     {
         cout << "\rFrame: " << _frame << flush;
         _SetFirstTime(frame_duration);
-        _ShowFrame();
+        if (!_ShowFrame())
+        {
+            cerr << "Cannot show a frame" << endl;
+            return false;
+        }
 
         if (_ControlKey())
             break;
@@ -100,17 +104,14 @@ bool cAsfPlayer::Play()
     return true;
 }
 
-int cAsfPlayer::_ProcessKey(int key)
+bool cAsfPlayer::_ProcessKey(int key)
 {
-    // FIXME: Let the exit_flag be a bool member of the class.
-    int exit_flag = 2;
     switch (key)
     {
     case -1: // Timeout
-        exit_flag = 0; //repeat
         break;
     case 'q':
-        exit_flag = 1;//good exit
+        _exit_flag = true;
         break;
     case ',':
         if (!_pause)
@@ -121,17 +122,16 @@ int cAsfPlayer::_ProcessKey(int key)
     case '.':
         if (!_pause)
             _pause = true;
-        ++_frame;
         _file.ChangePosition(_frame);
         break;
     case ' ':
         _pause = !_pause;
         break;
     default:
-        exit_flag = 0;
+        return false;
         break;
     }
-    return exit_flag;
+    return true;
 }
 
 void cAsfPlayer::_SetFirstTime(timeval& frame_duration)
@@ -166,34 +166,34 @@ bool cAsfPlayer::_ControlKey()
     //        _pause, there may be used one of them. "Frame by frame" means
     //        pause + show next frame.
     //
-    // yes, now this variable is not need
+    // yes, now _frame_by_frame variable is not need
     int key = 0;
-    if (_pause)
-        while (!(key = _ProcessKey(cvWaitKey(0))))
-        {
-        }
-    else
-        key = _ProcessKey(cvWaitKey(_GetWaitTime()));
-    if (key == 1)
+    if (!_pause)
+        key = _GetWaitTime();
+
+    while (!_ProcessKey(cvWaitKey(key)))
+    {
+    }
+    if (_exit_flag)
         return true;
 
     return false;
 }
 
-void cAsfPlayer::_ShowFrame()
+bool cAsfPlayer::_ShowFrame()
 {
     // FIXME: Check error
+    //I think, if we lost some data, frame should be show
+    // I check if create IplImage. I don't know where we get critical error
+    // if the frame is read badly, it will display the previous
+    // Where we can get more error?
     _file.ReadFrame();
-
     cAsfFile::FrameT const& image_data = _file.GetLastFrame();
     vector<int>::const_iterator iter = image_data.begin();
 
     for (int i = 0; i < _img->height; ++i)
         for (int j = 0; j < _img->width; ++j)
-        {
-            _data[i * _img->widthStep + j * _img->nChannels]
-                = *(++iter);
-        }
+            _data[i * _img->widthStep + j * _img->nChannels]= *(++iter);
 
     if (_scale)
     {
@@ -201,9 +201,13 @@ void cAsfPlayer::_ShowFrame()
                                            _img->height*_scale),
                                            _img->depth, _img->nChannels);
         cvResize(_img, _dst, 1);
+        if (!_dst)
+            return false;
     }
-
+    if (!_img)
+        return false;
     cvShowImage("frame", _full_screen ? _img : _dst);
+    return true;
 }
 
 bool cAsfPlayer::_InitRecord()

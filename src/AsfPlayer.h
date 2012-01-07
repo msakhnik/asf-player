@@ -62,8 +62,8 @@ private:
     uchar* _data;
 
     bool _InitRecord();
-    void _ShowFrame();
-    int _ProcessKey(int);
+    bool _ShowFrame();
+    bool _ProcessKey(int);
     bool _ControlKey();
     void _SetFirstTime(timeval &);
     int _GetWaitTime();

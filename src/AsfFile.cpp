@@ -151,8 +151,11 @@ void cAsfFile::ChangePosition(unsigned int pos)
         _file.seekg(_frame_position[pos]);
 }
 
-void cAsfFile::ReadFrame()
+bool cAsfFile::ReadFrame()
 {
+    if (!_file.is_open())
+        return false;
+
     _last_frame.clear();
     string line;
     while (_file.good())
@@ -175,6 +178,7 @@ void cAsfFile::ReadFrame()
 
     if (_last_frame.empty())
         cerr << "\nSome data is lost" << endl;;
+        return false;
 }
 
 bool cAsfFile::InitRecordFile()

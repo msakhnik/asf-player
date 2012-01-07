@@ -66,6 +66,7 @@ int main(int argc, char** argv)
         {
             { "scale",          required_argument, 0, 's' },
             { "record",        required_argument,          0, 'r' },
+            { "full-screen",           no_argument,           0, 'f' },
             { "help",           no_argument,           0, 'h' },
             { 0, 0, 0, 0 }
         };
@@ -73,7 +74,7 @@ int main(int argc, char** argv)
         int c = 0;
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "fr:s:th",
+        c = getopt_long(argc, argv, "fr:s:h",
                         long_options, &option_index);
         if (c == -1)
             break;
