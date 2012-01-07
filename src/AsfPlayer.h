@@ -66,8 +66,6 @@ private:
 
     bool _InitRecord();
     void _ShowFrame();
-    void _FillImgData();
-    void _SetPlayerOptions();
     int _ProcessKey(int);
     bool _ControlKey();
     void _SetFirstTime(timeval &);
