@@ -34,6 +34,7 @@ cAsfPlayer::cAsfPlayer(cAsfFile &file)
     , _frame_by_frame(false)
     , _record(false)
     , _scale(1)
+    , _frame(0)
     , _pause(false)
 {
 }
@@ -82,12 +83,11 @@ bool cAsfPlayer::Play()
     unsigned int end_frame = _file.GetEndFrame();
     struct timeval frame_duration;
 
-    int delay = _file.GetMsecPerFrame() * 1000;
-    frame_duration.tv_sec = 0;
-    frame_duration.tv_usec = delay;
+    int delay_usec = _file.GetMsecPerFrame() * 1000;
+    frame_duration.tv_sec = delay_usec / 1000000;
+    frame_duration.tv_usec = delay_usec % 1000000;
 
-    for (_frame = _file.GetStartFrame();
-           _frame <= end_frame; ++_frame)
+    for (_frame = _file.GetStartFrame(); _frame <= end_frame; ++_frame)
     {
         cout << "\rFrame: " << _frame << flush;
         _SetFirstTime(frame_duration);
@@ -96,36 +96,13 @@ bool cAsfPlayer::Play()
         if (_ControlKey())
             break;
     }
-    cerr << endl;
+    cout << "\nBye!" << endl;
     return true;
-}
-
-void cAsfPlayer::_FillImgData()
-{
-    cAsfFile::FrameT const& image_data = _file.GetLastFrame();
-    vector<int>::const_iterator iter = image_data.begin();
-
-    for (int i = 0; i < _img->height; ++i)
-        for (int j = 0; j < _img->width; ++j)
-        {
-            _data[i * _img->widthStep + j * _img->nChannels]
-                = *(++iter);
-        }
-}
-
-void cAsfPlayer::_SetPlayerOptions()
-{
-    if (_scale)
-    {
-        _dst = cvCreateImage(cvSize (_img->width*_scale,
-                                           _img->height*_scale),
-                                           _img->depth, _img->nChannels);
-        cvResize(_img, _dst, 1);
-    }
 }
 
 int cAsfPlayer::_ProcessKey(int key)
 {
+    // FIXME: Let the exit_flag be a bool member of the class.
     int exit_flag = 2;
     switch (key)
     {
@@ -133,7 +110,6 @@ int cAsfPlayer::_ProcessKey(int key)
         exit_flag = 0; //repeat
         break;
     case 'q':
-        cout << "\nBye!" << endl;
         exit_flag = 1;//good exit
         break;
     case ',':
@@ -185,6 +161,10 @@ int cAsfPlayer::_GetWaitTime()
 
 bool cAsfPlayer::_ControlKey()
 {
+    // FIXME: The logic is a bit obscure, simplify it.
+    //        I believe instead of two variables _frame_by_frame and
+    //        _pause, there may be used one of them. "Frame by frame" means
+    //        pause + show next frame.
     int key = 0;
     if (_pause || _frame_by_frame)
         while (!(key = _ProcessKey(cvWaitKey(0))))
@@ -200,9 +180,26 @@ bool cAsfPlayer::_ControlKey()
 
 void cAsfPlayer::_ShowFrame()
 {
+    // FIXME: Check error
     _file.ReadFrame();
-    _FillImgData();
-    _SetPlayerOptions();
+
+    cAsfFile::FrameT const& image_data = _file.GetLastFrame();
+    vector<int>::const_iterator iter = image_data.begin();
+
+    for (int i = 0; i < _img->height; ++i)
+        for (int j = 0; j < _img->width; ++j)
+        {
+            _data[i * _img->widthStep + j * _img->nChannels]
+                = *(++iter);
+        }
+
+    if (_scale)
+    {
+        _dst = cvCreateImage(cvSize (_img->width*_scale,
+                                           _img->height*_scale),
+                                           _img->depth, _img->nChannels);
+        cvResize(_img, _dst, 1);
+    }
 
     cvShowImage("frame", _full_screen ? _img : _dst);
 }
