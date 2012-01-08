@@ -63,14 +63,14 @@ private:
 
     bool _InitRecord();
     bool _ShowFrame();
-    bool _ProcessKey(int);
-    bool _ControlKey();
     void _SetFirstTime(timeval &);
-    int _GetWaitTime();
     void _GetWebCamData(std::vector<int> &);
 
     // Wait for user input atmost @msec milliseconds
     int _WaitForKey(int msec = 0);
+    int _GetWaitTime();
+    bool _ProcessKey(int);
+    void _WaitForInput();
 };
 
 // vim: set et ts=4 sw=4:

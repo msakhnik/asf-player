@@ -87,7 +87,9 @@ bool cAsfPlayer::Play()
     frame_duration.tv_sec = delay_usec / 1000000;
     frame_duration.tv_usec = delay_usec % 1000000;
 
-    for (_frame = _file.GetStartFrame(); _frame <= end_frame; ++_frame)
+    for (_frame = _file.GetStartFrame();
+         _frame <= end_frame && !_exit_flag;
+         ++_frame)
     {
         cout << "\rFrame: " << _frame << flush;
         _SetFirstTime(frame_duration);
@@ -97,15 +99,16 @@ bool cAsfPlayer::Play()
             return false;
         }
 
-        if (_ControlKey())
-            break;
+        _WaitForInput();
     }
     cout << "\nBye!" << endl;
     return true;
 }
 
+// Returns true if timeout elapsed or next frame has to be shown
 bool cAsfPlayer::_ProcessKey(int key)
 {
+    // FIXME: Apparently, it doesn't work when NumLock is on.
     switch (key)
     {
     case -1: // Timeout
@@ -117,6 +120,7 @@ bool cAsfPlayer::_ProcessKey(int key)
         if (!_pause)
             _pause = true;
         _frame -= 2;
+        // FIXME: _frame must not go before the first frame.
         _file.ChangePosition(_frame);
         break;
     case '.':
@@ -129,7 +133,6 @@ bool cAsfPlayer::_ProcessKey(int key)
         break;
     default:
         return false;
-        break;
     }
     return true;
 }
@@ -144,50 +147,47 @@ int cAsfPlayer::_GetWaitTime()
 {
     struct timeval now;
     gettimeofday(&now, NULL);
-    int wait_time = 1; //minimum delay
-    if (timercmp(&now, &_frame_deadline, <))
-    {
-        struct timeval new_time;
-        new_time.tv_sec = 0;
-        new_time.tv_usec = 0;
-        timersub(&_frame_deadline, &now, &new_time);
-        wait_time = new_time.tv_sec * 1000 +
-            new_time.tv_usec / 1000;
-    }
-    else
-        cerr << "\nSlow playing..." << endl;
+    struct timeval new_time;
+    new_time.tv_sec = 0;
+    new_time.tv_usec = 0;
+    timersub(&_frame_deadline, &now, &new_time);
+    int wait_time = new_time.tv_sec * 1000 +
+                    new_time.tv_usec / 1000;
     return wait_time;
 }
 
-bool cAsfPlayer::_ControlKey()
+// Process user input until the next frame has to be shown.
+void cAsfPlayer::_WaitForInput()
 {
-    // FIXME: The logic is a bit obscure, simplify it.
-    //        I believe instead of two variables _frame_by_frame and
-    //        _pause, there may be used one of them. "Frame by frame" means
-    //        pause + show next frame.
-    //
-    // yes, now _frame_by_frame variable is not need
-    int key = 0;
-    if (!_pause)
-        key = _GetWaitTime();
-
-    while (!_ProcessKey(cvWaitKey(key)))
+    // The user may press a key, thus, interrupting the waiting.
+    // So we need to retry waiting until the next frame has to be shown.
+    for (int i = 0; ; ++i)
     {
-    }
-    if (_exit_flag)
-        return true;
+        int wait_msec = 0;
+        if (!_pause)
+        {
+            wait_msec = _GetWaitTime();
+            if (wait_msec <= 0)
+            {
+                if (i > 0)
+                    return;
+                cerr << "\nYour system is too slow..." << endl;
+                wait_msec = 1; // minimal wait time
+            }
+        }
 
-    return false;
+        int key = cvWaitKey(wait_msec);
+        if (_ProcessKey(key))
+            return;
+    }
 }
 
 bool cAsfPlayer::_ShowFrame()
 {
-    // FIXME: Check error
-    //I think, if we lost some data, frame should be show
-    // I check if create IplImage. I don't know where we get critical error
-    // if the frame is read badly, it will display the previous
-    // Where we can get more error?
-    _file.ReadFrame();
+    if (!_file.ReadFrame())
+    {
+        // FIXME: TBD
+    }
     cAsfFile::FrameT const& image_data = _file.GetLastFrame();
     vector<int>::const_iterator iter = image_data.begin();
 
