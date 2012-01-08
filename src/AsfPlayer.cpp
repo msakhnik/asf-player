@@ -109,6 +109,7 @@ bool cAsfPlayer::Play()
 bool cAsfPlayer::_ProcessKey(int key)
 {
     // FIXME: Apparently, it doesn't work when NumLock is on.
+    cout << key << endl;
     switch (key)
     {
     case -1: // Timeout
@@ -119,14 +120,19 @@ bool cAsfPlayer::_ProcessKey(int key)
     case ',':
         if (!_pause)
             _pause = true;
-        _frame -= 2;
-        // FIXME: _frame must not go before the first frame.
-        _file.ChangePosition(_frame);
+        if (_frame > 1)
+        {
+            _frame -= 2;
+            _file.ChangePosition(_frame + 1);
+        }
+        else
+            return false;
         break;
     case '.':
         if (!_pause)
             _pause = true;
-        _file.ChangePosition(_frame);
+        if (_frame != _file.GetEndFrame())
+            _file.ChangePosition(_frame+1);
         break;
     case ' ':
         _pause = !_pause;
