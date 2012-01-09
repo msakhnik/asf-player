@@ -177,8 +177,12 @@ bool cAsfFile::ReadFrame()
     }
 
     if (_last_frame.empty())
+    {
         cerr << "\nSome data is lost" << endl;;
         return false;
+    }
+
+    return true;
 }
 
 bool cAsfFile::InitRecordFile()

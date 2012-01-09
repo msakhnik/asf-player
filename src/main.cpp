@@ -60,93 +60,99 @@ int main(int argc, char** argv)
     unsigned int scale = 1;
     bool record = false;
     string filename;
-    while (true)
-    {
-        static struct option long_options[] =
+    try {
+        while (true)
         {
-            { "scale",          required_argument, 0, 's' },
-            { "record",        required_argument,          0, 'r' },
-            { "full-screen",           no_argument,           0, 'f' },
-            { "help",           no_argument,           0, 'h' },
-            { 0, 0, 0, 0 }
-        };
-
-        int c = 0;
-        int option_index = 0;
-
-        c = getopt_long(argc, argv, "fr:s:h",
-                        long_options, &option_index);
-        if (c == -1)
-            break;
-
-        switch (c)
-        {
-        case 'h':
-            _ReadHelp(progname);
-            return 0;
-
-        case 'r':
-            record = true;
-            filename = optarg;
-            break;
-
-        case 's':
-            scale = atoi(optarg);
-            if (scale < 1 || scale > 20)
+            static struct option long_options[] =
             {
-                cerr << "Scale is not valid! Only 1..20 range" << endl;
+                { "scale",          required_argument, 0, 's' },
+                { "record",        required_argument,          0, 'r' },
+                { "record",        required_argument,          0, 'r' },
+                { "full-screen",           no_argument,           0, 'f' },
+                { "help",           no_argument,           0, 'h' },
+                { 0, 0, 0, 0 }
+            };
+
+            int c = 0;
+            int option_index = 0;
+
+            c = getopt_long(argc, argv, "fr:s:h",
+                            long_options, &option_index);
+            if (c == -1)
+                break;
+
+            switch (c)
+            {
+            case 'h':
+                _ReadHelp(progname);
+                return 0;
+
+            case 'r':
+                record = true;
+                filename = optarg;
+                break;
+
+            case 's':
+                scale = atoi(optarg);
+                if (scale < 1 || scale > 20)
+                {
+                    cerr << "Scale is not valid! Only 1..20 range" << endl;
+                    return 1;
+                }
+                break;
+
+            case 'f':
+                full_screen = true;
+                break;
+
+            default:
+                cerr << "Unknown option '" << c << "'" << endl;
                 return 1;
             }
-            break;
+        }
 
-        case 'f':
-            full_screen = true;
-            break;
-
-        default:
-            cerr << "Unknown option '" << c << "'" << endl;
+        if (argc != optind + 1 && !record)
+        {
+            cerr << "File name is missing (try --help)" << endl;
             return 1;
         }
-    }
+        if (filename.length() == 0)
+            filename = argv[optind];
 
-    if (argc != optind + 1 && !record)
+        if (filename.length() < 4 ||
+            filename.substr(filename.length() - 4, 4) != ".asf")
+        {
+            cerr << "File '" << filename << "' isn't supported" << endl;
+            return 1;
+        }
+
+        cAsfFile file(filename);
+
+        cAsfPlayer player(file);
+        if (record)
+        {
+            player.RecordVideo();
+            return 0;
+        }
+
+        if (full_screen)
+            player.SetFullScreen(true);
+        else
+        {
+            if (scale != 1)
+                player.SetScale(scale);
+        }
+
+
+        if (!player.Init())
+            return 1;
+
+        player.Play();
+    }
+    catch (cv::Exception& e)
     {
-        cerr << "File name is missing (try --help)" << endl;
-        return 1;
+        cout << endl << e.what() <<endl;
     }
-    if (filename.length() == 0)
-        filename = argv[optind];
-
-    if (filename.length() < 4 ||
-        filename.substr(filename.length() - 4, 4) != ".asf")
-    {
-        cerr << "File '" << filename << "' isn't supported" << endl;
-        return 1;
-    }
-
-    cAsfFile file(filename);
-
-    cAsfPlayer player(file);
-    if (record)
-    {
-        player.RecordVideo();
-        return 0;
-    }
-
-    if (full_screen)
-        player.SetFullScreen(true);
-    else
-    {
-        if (scale != 1)
-            player.SetScale(scale);
-    }
-
-
-    if (!player.Init())
-        return 1;
-
-    player.Play();
-
     return 0;
 }
 

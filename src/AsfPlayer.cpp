@@ -50,25 +50,19 @@ cAsfPlayer::~cAsfPlayer()
 bool cAsfPlayer::Init()
 {
     if (!_file.ReadHeader() || !_file.SetPositionFrame())
-    {
-        cerr << "Error reading from file" << endl;
-        return false;
-    }
+        throw runtime_error("Error reading from file");
+
     if (!_file.GetCols() || !_file.GetRows())
-    {
-        cerr << "Can't reproduce one-dimensional film" << endl;
-        return false;
-    }
+        throw runtime_error("Can't reproduce one-dimensional film");
+
     _img = cvCreateImage(cvSize(_file.GetCols(), _file.GetRows()),
                                         IPL_DEPTH_8U, 1);
      _dst = cvCreateImage(cvSize(_img->width*_scale,
                                          _img->height * _scale),
                                          _img->depth, _img->nChannels);
     if (!_img || !_dst)
-    {
-        cerr << "Cannot create a window " << endl;
-        return false;
-    }
+        throw runtime_error("Cannot create a window");
+        
     _data = reinterpret_cast<uchar *>(_img->imageData);
     cvNamedWindow("frame", _full_screen ? 0 : 1);
     // Check if it's the full screen mode
@@ -94,10 +88,7 @@ bool cAsfPlayer::Play()
         cout << "\rFrame: " << _frame << flush;
         _SetFirstTime(frame_duration);
         if (!_ShowFrame())
-        {
-            cerr << "Cannot show a frame" << endl;
-            return false;
-        }
+            throw runtime_error("Can not show a frame");
 
         _WaitForInput();
     }
@@ -109,7 +100,6 @@ bool cAsfPlayer::Play()
 bool cAsfPlayer::_ProcessKey(int key)
 {
     // FIXME: Apparently, it doesn't work when NumLock is on.
-    cout << key << endl;
     switch (key)
     {
     case -1: // Timeout
@@ -191,9 +181,8 @@ void cAsfPlayer::_WaitForInput()
 bool cAsfPlayer::_ShowFrame()
 {
     if (!_file.ReadFrame())
-    {
-        // FIXME: TBD
-    }
+        throw runtime_error("Frame can not be read");
+
     cAsfFile::FrameT const& image_data = _file.GetLastFrame();
     vector<int>::const_iterator iter = image_data.begin();
 
@@ -207,11 +196,8 @@ bool cAsfPlayer::_ShowFrame()
                                            _img->height*_scale),
                                            _img->depth, _img->nChannels);
         cvResize(_img, _dst, 1);
-        if (!_dst)
-            return false;
     }
-    if (!_img)
-        return false;
+
     cvShowImage("frame", _full_screen ? _img : _dst);
     return true;
 }
@@ -224,10 +210,8 @@ bool cAsfPlayer::_InitRecord()
     assert(_capture);
 
     if (!_capture)
-    {
-        cout << "Webcam not found!" << endl;
-        return false;
-    }
+        throw runtime_error("Webcam not found");
+
     cvSetCaptureProperty(_capture, CV_CAP_PROP_FRAME_WIDTH, 320); //1280);
     cvSetCaptureProperty(_capture, CV_CAP_PROP_FRAME_HEIGHT, 240); //960);
 
