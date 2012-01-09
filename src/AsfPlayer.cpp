@@ -100,6 +100,7 @@ bool cAsfPlayer::Play()
 bool cAsfPlayer::_ProcessKey(int key)
 {
     // FIXME: Apparently, it doesn't work when NumLock is on.
+    cout << endl << key << endl;
     switch (key)
     {
     case -1: // Timeout
