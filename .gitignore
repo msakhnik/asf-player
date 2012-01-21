@@ -18,3 +18,4 @@ missing
 example/test1.asf
 src/player
 src/*.asf
+src/gzip
