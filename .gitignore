@@ -4,7 +4,6 @@ asf-player
 nbproject/
 COPYING
 INSTALL
-Makefile
 Makefile.in
 aclocal.m4
 autom4te.cache
@@ -18,3 +17,5 @@ missing
 example/test1.asf
 src/player
 src/*.asf
+src/gzip
+src/AsfFile.h.gch

@@ -99,12 +99,10 @@ bool cAsfPlayer::Play()
 // Returns true if timeout elapsed or next frame has to be shown
 bool cAsfPlayer::_ProcessKey(int key)
 {
-    // FIXME: Apparently, it doesn't work when NumLock is on.
-    cout << endl << key << endl;
+    key = key & 0xFFFF;
+
     switch (key)
     {
-    case -1: // Timeout
-        break;
     case 'q':
         _exit_flag = true;
         break;
