@@ -1,7 +1,6 @@
 # Makefile for Asf - tools project
 
 #################
-
 PLAYER_TOOL = player
 
 CXX = g++
@@ -15,8 +14,6 @@ INCLUDES = $(shell pkg-config --cflags opencv)
 LIBS = $(shell pkg-config --libs opencv)
 
 all : $(PLAYER_TOOL)
-
-#################
 
 $(PLAYER_TOOL): main.o AsfPlayer.o AsfFile.o
 	$(CXX) -o $(PLAYER_TOOL) main.o AsfPlayer.o AsfFile.o $(CFLAGS) $(INCLUDES) $(LIBS)
