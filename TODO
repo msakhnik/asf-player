@@ -1,10 +1,6 @@
 * Develop automatic tests
 
-* Add method for writing asf-files
-
 * Convert avi or any video-files to asf text file (use ffmpeg)
-
-* Add gzip compression mode
 
 * Build a reusable codec (for instance a gstreamer plugin) based on the same
   code to watch ASF in the system player.

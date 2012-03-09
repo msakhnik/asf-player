@@ -19,3 +19,6 @@ src/player
 src/*.asf
 src/gzip
 src/AsfFile.h.gch
+src/AsfPlayer.h.gch
+! test/*.cpp
+! test/Makefile
