@@ -19,6 +19,8 @@ src/player
 src/*.asf
 src/*.gch
 src/Makefile
+src/Makefile.in
 test/Makefile
+test/Makefile.in
 ! test/*.cpp
 ! test/Makefile
