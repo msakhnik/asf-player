@@ -18,6 +18,7 @@ example/test1.asf
 src/player
 src/*.asf
 src/*.gch
-src/gzip
+src/Makefile
+test/Makefile
 ! test/*.cpp
 ! test/Makefile
